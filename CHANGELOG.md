@@ -1,8 +1,22 @@
 # Changelog
 
-All notable Metis AI releases are documented here. Release tags and GitHub
-releases are created locally with `pnpm release`; GitHub Actions does not
-publish releases.
+J.A.R.V.I.S. Mk3.1 changes are listed first. Earlier entries document the
+inherited Metis releases and are retained for attribution and history.
+
+## v3.1.0 — source preview, unpublished
+
+- Create the private J.A.R.V.I.S. Mk3.1 workspace from Metis commit
+  `e95b94d3844da52db263c2f89d3068796c3cb787` while preserving history
+  and MIT attribution.
+- Rebrand the workspace and agent identity for J.A.R.V.I.S. Mk3.1.
+- Add an optional, token-protected bridge to the separate Jarvis Mk3 Core for
+  health checks and task submission/status. Core approvals remain in Core.
+- Restrict raw MCP bearer clients to an audited tool allowlist and require
+  host-admin rights for stdio server registration.
+- Add a Linux source-build Compose installer, private data paths and
+  localhost-only published web port; keep MCP on the Compose network.
+- Disable in-app self-update until private release assets and Linux upgrade
+  tests are available.
 
 ## v1.0.9 — 2026-09-21
 

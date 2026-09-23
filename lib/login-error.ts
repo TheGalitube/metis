@@ -1,6 +1,6 @@
 export const LOGIN_CREDENTIAL_ERROR = "Wrong username or password";
 export const LOGIN_RATE_LIMIT_ERROR = "Too many login attempts. Please try again later.";
-export const LOGIN_SERVER_ERROR = "Metis cannot reach the server or access its storage. Check the server and try again.";
+export const LOGIN_SERVER_ERROR = "J.A.R.V.I.S. Mk3.1 cannot reach the server or access its storage. Check the server and try again.";
 
 export function loginErrorMessage(status?: number, serverMessage = "") {
   if (status === 401) return LOGIN_CREDENTIAL_ERROR;

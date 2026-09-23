@@ -35,7 +35,7 @@ bash public/install/docker.sh \
   --install-dir "$work_dir/install" \
   --data-dir "$work_dir/data" \
   --workspace "$work_dir/workspace" \
-  --dry-run | grep -F "image:     ghcr.io/f1shyondrugs/metis-ai:${release_tag}"
+  --dry-run | grep -F "image:     ghcr.io/thegalitube/jarvis-mk3-1:${release_tag}"
 [[ ! -e "$work_dir/install/.env" && ! -e "$work_dir/install/docker-compose.yml" ]]
 echo "DOCKER_DRY_RUN_OK"
 

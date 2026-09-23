@@ -12,7 +12,7 @@ export async function POST(req: Request) {
   }
   const userId = await getAuthenticatedUserId(req);
   if (!isHostAdmin(userId)) {
-    return Response.json({ error: "Only host administrators can reset Metis." }, { status: 403 });
+    return Response.json({ error: "Only host administrators can reset J.A.R.V.I.S. Mk3.1." }, { status: 403 });
   }
   try {
     const result = resetMetisData();
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     return response;
   } catch (error) {
     return Response.json(
-      { error: error instanceof Error ? error.message : "Metis reset failed." },
+      { error: error instanceof Error ? error.message : "J.A.R.V.I.S. Mk3.1 reset failed." },
       { status: 500 },
     );
   }

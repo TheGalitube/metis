@@ -11,8 +11,8 @@ export function MaintenanceScreen({ reason, logs = [] }: { reason?: string; logs
         </div>
         <div className="space-y-2">
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Maintenance</p>
-          <h1 className="text-xl font-semibold tracking-tight">Metis is being updated</h1>
-          <p className="text-sm leading-6 text-muted-foreground">Metis is temporarily unavailable while the installer updates this installation. Please keep this page open.</p>
+          <h1 className="text-xl font-semibold tracking-tight">J.A.R.V.I.S. is being updated</h1>
+          <p className="text-sm leading-6 text-muted-foreground">J.A.R.V.I.S. is temporarily unavailable while the installer updates this installation. Please keep this page open.</p>
           {reason ? <p className="text-xs text-muted-foreground/80">{reason}</p> : null}
         </div>
         {logs.length ? (

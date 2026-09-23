@@ -44,37 +44,37 @@
 }
 
 .dark {
-  --background: oklch(0.125 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.155 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.165 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.19 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.19 0 0);
-  --muted-foreground: oklch(0.68 0 0);
-  --accent: oklch(0.205 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --background: oklch(0.18 0.025 232);
+  --foreground: oklch(0.95 0.012 230);
+  --card: oklch(0.215 0.027 232);
+  --card-foreground: oklch(0.95 0.012 230);
+  --popover: oklch(0.225 0.029 232);
+  --popover-foreground: oklch(0.95 0.012 230);
+  --primary: oklch(0.82 0.12 220);
+  --primary-foreground: oklch(0.17 0.032 233);
+  --secondary: oklch(0.25 0.031 230);
+  --secondary-foreground: oklch(0.95 0.012 230);
+  --muted: oklch(0.245 0.025 230);
+  --muted-foreground: oklch(0.73 0.027 230);
+  --accent: oklch(0.285 0.048 226);
+  --accent-foreground: oklch(0.96 0.018 225);
   --destructive: oklch(0.65 0.2 22);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.5 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.115 0 0);
-  --sidebar-foreground: oklch(0.92 0 0);
-  --sidebar-primary: oklch(0.92 0 0);
-  --sidebar-primary-foreground: oklch(0.145 0 0);
-  --sidebar-accent: oklch(0.22 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 8%);
-  --sidebar-ring: oklch(0.5 0 0);
+  --border: oklch(0.72 0.065 222 / 17%);
+  --input: oklch(0.72 0.065 222 / 20%);
+  --ring: oklch(0.82 0.12 220);
+  --chart-1: oklch(0.82 0.12 220);
+  --chart-2: oklch(0.78 0.13 168);
+  --chart-3: oklch(0.79 0.12 82);
+  --chart-4: oklch(0.7 0.12 265);
+  --chart-5: oklch(0.66 0.16 28);
+  --sidebar: oklch(0.16 0.023 232);
+  --sidebar-foreground: oklch(0.91 0.017 230);
+  --sidebar-primary: oklch(0.82 0.12 220);
+  --sidebar-primary-foreground: oklch(0.16 0.023 232);
+  --sidebar-accent: oklch(0.26 0.04 225);
+  --sidebar-accent-foreground: oklch(0.96 0.018 225);
+  --sidebar-border: oklch(0.72 0.065 222 / 16%);
+  --sidebar-ring: oklch(0.82 0.12 220);
 }
 
 @theme inline {
@@ -160,18 +160,75 @@
 }
 
 
-/* Metis product shell: flat surfaces, restrained motion, and compact controls. */
+/* J.A.R.V.I.S. Mk3.1 product shell. */
 .metis-shell {
   letter-spacing: -0.006em;
 }
 
-.metis-wordmark {
-  font-family: var(--font-wordmark), "Times New Roman", serif;
-  font-size: 1.375rem;
-  font-style: italic;
-  font-weight: 400;
+.jarvis-wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+  color: var(--foreground);
+}
+
+.jarvis-wordmark-mark {
+  width: 2rem;
+  height: 2rem;
+  flex: none;
+  color: var(--primary);
+  filter: drop-shadow(0 0 0.45rem color-mix(in oklch, var(--primary) 32%, transparent));
+}
+
+.jarvis-wordmark-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.125rem;
   line-height: 1;
-  letter-spacing: -0.055em;
+}
+
+.jarvis-wordmark-name {
+  font-family: var(--font-sans), Arial, sans-serif;
+  font-size: 0.94rem;
+  font-weight: 740;
+  letter-spacing: 0.085em;
+  white-space: nowrap;
+}
+
+.jarvis-wordmark-version {
+  color: var(--primary);
+  font-family: var(--font-mono), monospace;
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+}
+
+.jarvis-sidebar {
+  background: linear-gradient(165deg, var(--sidebar), color-mix(in oklch, var(--sidebar) 72%, var(--background)));
+}
+
+.jarvis-app-header {
+  background: color-mix(in oklch, var(--background) 86%, var(--card));
+}
+
+.jarvis-empty-state {
+  background: radial-gradient(ellipse 48% 42% at 50% 38%, color-mix(in oklch, var(--primary) 7%, transparent), transparent 76%);
+}
+
+.jarvis-stage {
+  background: radial-gradient(circle at 50% 50%, color-mix(in oklch, var(--primary) 8%, var(--background)), var(--background) 65%);
+}
+
+.jarvis-stage-halo {
+  position: absolute;
+  width: min(58rem, 95vw);
+  aspect-ratio: 1;
+  border: 1px solid color-mix(in oklch, var(--primary) 14%, transparent);
+  border-radius: 50%;
+  box-shadow: 0 0 0 5rem color-mix(in oklch, var(--primary) 2%, transparent), inset 0 0 7rem color-mix(in oklch, var(--primary) 4%, transparent);
+  pointer-events: none;
 }
 
 .metis-shell button,

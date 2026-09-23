@@ -66,7 +66,6 @@ import { AdminUsersPanel } from "@/components/admin-users-panel";
 import type { AgentMode, ToolPermissionCategory } from "@/lib/store";
 import { TOOL_PERMISSION_CATEGORIES } from "@/lib/modes";
 import { PlanUsagePanel } from "@/components/quota-gauges";
-import { UpdateSettingsPanel, UpdateStatusProbe } from "@/components/update-channel-nav";
 import { BrowserSettingsControls } from "@/components/browser-settings-controls";
 import type { UsageSnapshot } from "@/lib/usage-display";
 
@@ -348,7 +347,6 @@ type Props = {
   onModesChanged?: () => void;
   onLogout: () => void;
   onResetMetis?: () => Promise<void>;
-  onUpdateMetis?: () => Promise<void>;
   isHostAdmin?: boolean;
 };
 
@@ -454,7 +452,6 @@ export function SettingsPanel({
   onModesChanged,
   onLogout,
   onResetMetis,
-  onUpdateMetis,
   isHostAdmin = false,
 }: Props) {
   const [draft, setDraft] = useState("");
@@ -480,7 +477,6 @@ export function SettingsPanel({
   const [browserStorageDeleteTarget, setBrowserStorageDeleteTarget] = useState<string | null>(null);
   const [browserStorageClearAll, setBrowserStorageClearAll] = useState(false);
   const [settingsPane, setSettingsPane] = useState<"tab" | "browser-storage">("tab");
-  const [updateAvailable, setUpdateAvailable] = useState(false);
   const [browserStorageQuery, setBrowserStorageQuery] = useState("");
   const [compressionPreview, setCompressionPreview] = useState("");
   const [compressionPreviewResult, setCompressionPreviewResult] = useState<{
@@ -542,7 +538,6 @@ export function SettingsPanel({
   const [browserNotificationsAvailable, setBrowserNotificationsAvailable] =
     useState(false);
   const [resetMetisOpen, setResetMetisOpen] = useState(false);
-  const [updateMetisOpen, setUpdateMetisOpen] = useState(false);
   const loadRemoteClients = useCallback(async () => {
     try {
       const response = await fetch("/api/remote-clients", { cache: "no-store" });
@@ -1360,7 +1355,6 @@ export function SettingsPanel({
         </DialogHeader>
 
         <Tabs value={settingsTab} onValueChange={(tab) => { setSettingsPane("tab"); setBrowserStorageQuery(""); onSettingsTabChange(tab); }} className="min-h-0 flex-1 gap-0 md:grid md:items-stretch md:grid-cols-[13rem_minmax(0,1fr)]">
-          <UpdateStatusProbe isHostAdmin={Boolean(isHostAdmin)} onUpdateAvailableChange={setUpdateAvailable} />
           <div className="border-b border-border bg-muted/20 p-3 md:hidden">
             <CustomSelect
               value={settingsTab}
@@ -1373,7 +1367,7 @@ export function SettingsPanel({
                 { value: "agent", label: "Agent" },
  { value: "devices", label: "Devices" },
  { value: "admin", label: isHostAdmin ? "Admin" : "Chats" },
- { value: "updates", label: updateAvailable ? "Update Available" : "Updates" },
+ { value: "updates", label: "Updates" },
               ]}
             />
           </div>
@@ -1386,18 +1380,13 @@ export function SettingsPanel({
            : tab.value === "devices" ? PlugZap
            : tab.value === "updates" ? RefreshCw
            : Users;
-           const label = tab.value === "updates" && updateAvailable
-             ? "Update Available"
-             : tab.value === "admin" ? (isHostAdmin ? "Admin" : "Chats") : tab.label;
+           const label = tab.value === "admin" ? (isHostAdmin ? "Admin" : "Chats") : tab.label;
            const expanded = settingsTab === tab.value;
            return (
            <Fragment key={tab.value}>
            <TabsTrigger
              value={tab.value}
-             className={cn(
-               "min-h-10 w-full justify-start px-2.5 py-2.5 pl-4 has-data-[icon=inline-start]:pl-4 md:h-auto md:flex-none",
-               tab.value === "updates" && updateAvailable && "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
-             )}
+             className="min-h-10 w-full justify-start px-2.5 py-2.5 pl-4 has-data-[icon=inline-start]:pl-4 md:h-auto md:flex-none"
            >
            <Icon data-icon="inline-start" />
            {label}
@@ -1544,10 +1533,12 @@ export function SettingsPanel({
  ) : (
  <>
 <TabsContent value="updates" className="mt-0 px-6 py-6 sm:px-8 sm:py-8">
-  <UpdateSettingsPanel
-    isHostAdmin={Boolean(isHostAdmin)}
-    onUpdateAvailableChange={setUpdateAvailable}
-  />
+  <div className="max-w-2xl">
+    <h3 className="text-sm font-medium">J.A.R.V.I.S. Mk3.1 preview</h3>
+    <p className="mt-2 text-sm leading-6 text-muted-foreground">
+      Automatic updates are unavailable in this private preview. Apply reviewed updates on the Linux host.
+    </p>
+  </div>
 </TabsContent>
 
 <TabsContent value="general" className="mt-0 space-y-10 px-6 py-6 sm:px-8 sm:py-8">
@@ -1938,7 +1929,7 @@ export function SettingsPanel({
                 <div>
                   <h3 id="settings-links" className="text-sm font-medium">Links</h3>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Visit the Metis website or view the source code on GitHub.
+                    Metis is the upstream engine. Visit its original website or source repository.
                   </p>
                 </div>
                 <div className="grid gap-2 sm:grid-cols-2">
@@ -2635,15 +2626,11 @@ export function SettingsPanel({
 
 {isHostAdmin ? (
                   <div className="mt-3 border-t border-destructive/30 pt-4">
-                    <h3 id="settings-maintenance" className="text-sm font-medium">Metis maintenance</h3>
+                    <h3 id="settings-maintenance" className="text-sm font-medium">J.A.R.V.I.S. maintenance</h3>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      Prepare a production update or reset Metis to its clean initial state.
+                      Reset J.A.R.V.I.S. data and return to the initial setup.
                     </p>
-                    <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                      <Button type="button" variant="outline" onClick={() => setUpdateMetisOpen(true)}>
-                        <RefreshCw data-icon="inline-start" />
-                        Update Metis
-                      </Button>
+                    <div className="mt-3 flex">
                       <Button type="button" variant="destructive" onClick={() => setResetMetisOpen(true)}>
                         <RotateCcw data-icon="inline-start" />
                         Reset account
@@ -2788,21 +2775,10 @@ export function SettingsPanel({
         }}
       />
       <ConfirmDialog
-        open={updateMetisOpen}
-        onOpenChange={setUpdateMetisOpen}
-        title="Update Metis?"
-        description="Metis will install the locked dependencies and build the inactive production slot. The active service will not be restarted automatically."
-        confirmLabel="Prepare update"
-        destructive={false}
-        onConfirm={async () => {
-          if (onUpdateMetis) await onUpdateMetis();
-        }}
-      />
-      <ConfirmDialog
         open={resetMetisOpen}
         onOpenChange={setResetMetisOpen}
-        title="Reset all Metis data?"
-        description="This permanently removes chats, notes, memories, provider credentials, MCP servers, workflows, browser data, automations, remote clients, jobs and usage history. User accounts and the base installation remain. You will be signed out and must set up Metis again."
+        title="Reset all J.A.R.V.I.S. data?"
+        description="This permanently removes chats, notes, memories, provider credentials, MCP servers, workflows, browser data, automations, remote clients, jobs and usage history. User accounts and the base installation remain. You will be signed out and must set up J.A.R.V.I.S. again."
         confirmLabel="Reset everything"
         onConfirm={async () => {
           if (onResetMetis) await onResetMetis();

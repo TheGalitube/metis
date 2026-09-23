@@ -1,7 +1,7 @@
 services:
   app:
     build: .
-    image: metis-ai:local
+    image: jarvis-mk3-1:local
     restart: unless-stopped
     env_file: .env
     environment:
@@ -34,7 +34,7 @@ services:
         condition: service_healthy
 
   worker:
-    image: metis-ai:local
+    image: jarvis-mk3-1:local
     restart: unless-stopped
     command: ["pnpm", "exec", "tsx", "worker.ts"]
     env_file: .env
@@ -56,7 +56,7 @@ services:
         condition: service_healthy
 
   mcp:
-    image: metis-ai:local
+    image: jarvis-mk3-1:local
     restart: unless-stopped
     command: ["node", "lib/mcp-core/gateway-core.mjs"]
     env_file: .env
@@ -80,5 +80,5 @@ services:
     volumes:
       - ${METIS_DATA_DIR:-./data}:/data
       - ${METIS_WORKSPACE:-./workspace}:/workspace
-    ports:
-      - "${AI_CHAT_HOST:-127.0.0.1}:${MCP_PORT:-8787}:8787"
+    expose:
+      - "8787"

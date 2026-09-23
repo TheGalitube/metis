@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Reproducible Docker-first installer for Metis AI releases.
+# Reproducible Docker-first installer for J.A.R.V.I.S. Mk3.1 releases.
 # It never clones the repository and never removes data or workspace files.
 set -Eeuo pipefail
 
-IMAGE_REPOSITORY="${METIS_IMAGE_REPOSITORY:-ghcr.io/f1shyondrugs/metis-ai}"
+IMAGE_REPOSITORY="${METIS_IMAGE_REPOSITORY:-ghcr.io/thegalitube/jarvis-mk3-1}"
 VERSION="${METIS_RELEASE_VERSION:-latest}"
-INSTALL_DIR="${METIS_INSTALL_DIR:-$HOME/metis-ai}"
+INSTALL_DIR="${METIS_INSTALL_DIR:-$HOME/jarvis-mk3-1}"
 DATA_DIR="${METIS_DATA_DIR:-}"
 WORKSPACE_DIR="${METIS_WORKSPACE:-}"
 PORT="${PORT:-3100}"
@@ -32,7 +32,7 @@ usage() {
   cat <<'EOF'
 Usage: docker.sh [options]
 
-Installs or upgrades Metis AI from a versioned image on GHCR.
+Installs or upgrades J.A.R.V.I.S. Mk3.1 from a versioned image on GHCR.
 
 Options:
   --version VERSION       Release tag such as v1.0.0, or latest (default: latest)
@@ -42,7 +42,7 @@ Options:
   --port PORT              Web port (default: 3100)
   --bind HOST              Bind address (default: 127.0.0.1)
   --mcp-port PORT          MCP gateway port (default: 8787)
-  --image-repository REPO  GHCR repository (default: ghcr.io/f1shyondrugs/metis-ai)
+  --image-repository REPO  GHCR repository (default: ghcr.io/thegalitube/jarvis-mk3-1)
   --non-interactive        Do not prompt
   --replace-existing      Uninstall a detected native install (keeps data), then continue
   --dry-run                Print the planned configuration without changing files
@@ -96,9 +96,9 @@ docker info >/dev/null 2>&1 || fail "Docker is not running or the current user c
 
 existing_native=""
 existing_native_dir=""
-if command -v systemctl >/dev/null 2>&1 && systemctl cat metis-ai.service >/dev/null 2>&1; then
-  existing_native="$(systemctl is-active metis-ai.service 2>/dev/null || true)"
-  existing_native_dir="$(systemctl show -p WorkingDirectory --value metis-ai.service 2>/dev/null || true)"
+if command -v systemctl >/dev/null 2>&1 && systemctl cat jarvis-mk3-1-workspace.service >/dev/null 2>&1; then
+  existing_native="$(systemctl is-active jarvis-mk3-1-workspace.service 2>/dev/null || true)"
+  existing_native_dir="$(systemctl show -p WorkingDirectory --value jarvis-mk3-1-workspace.service 2>/dev/null || true)"
 fi
 
 IMAGE="${IMAGE_REPOSITORY}:${VERSION}"
@@ -127,8 +127,8 @@ if [[ -n "$existing_native" ]]; then
   elif (( NON_INTERACTIVE )); then
     choice=""
   else
-    printf 'Existing native Metis AI detected.\n'
-    printf '  service:   metis-ai.service (%s)\n' "$existing_native"
+    printf 'Existing native J.A.R.V.I.S. Mk3.1 detected.\n'
+    printf '  service:   jarvis-mk3-1-workspace.service (%s)\n' "$existing_native"
     printf '  directory: %s\n' "${existing_native_dir:-unknown}"
     printf '[r] Replace it (uninstall native, keep data, then continue)\n[a] Abort\n'
     if [[ -t 0 ]]; then
@@ -141,9 +141,9 @@ if [[ -n "$existing_native" ]]; then
     r|R)
       native_dir="${existing_native_dir:-}"
       [[ -n "$native_dir" && "$native_dir" != "/" && "$native_dir" != "$HOME" ]] || fail "Could not resolve the native install directory."
-      printf 'Stopping native Metis AI at %s (data kept; directory left in place).\n' "$native_dir"
+      printf 'Stopping native J.A.R.V.I.S. Mk3.1 at %s (data kept; directory left in place).\n' "$native_dir"
       if command -v systemctl >/dev/null 2>&1; then
-        for unit in metis-ai.service metis-ai-worker.service metis-ai-mcp.service; do
+        for unit in jarvis-mk3-1-workspace.service jarvis-mk3-1-workspace-worker.service jarvis-mk3-1-workspace-mcp.service; do
           if [[ "$(id -u)" -eq 0 ]]; then
             systemctl disable --now "$unit" >/dev/null 2>&1 || true
             rm -f "/etc/systemd/system/$unit"
@@ -166,7 +166,7 @@ if [[ -n "$existing_native" ]]; then
       exit 0
       ;;
     *)
-      fail "Metis AI is already installed as metis-ai.service (${existing_native}) in ${existing_native_dir:-an unknown directory}. Re-run and choose replace, or pass --replace-existing."
+      fail "J.A.R.V.I.S. Mk3.1 is already installed as jarvis-mk3-1-workspace.service (${existing_native}) in ${existing_native_dir:-an unknown directory}. Re-run and choose replace, or pass --replace-existing."
       ;;
   esac
 fi
@@ -209,7 +209,7 @@ if [[ ! -f "$ENV_FILE" ]]; then
   mcp_token="$(random_secret)"
   : > "$ENV_FILE"
   chmod 600 "$ENV_FILE"
-  upsert_env APP_NAME "$(quote_env "Metis AI")"
+  upsert_env APP_NAME "$(quote_env "J.A.R.V.I.S. Mk3.1")"
   upsert_env CHAT_USERNAME "admin"
   upsert_env AI_CHAT_SECRETS_KEY "$(quote_env "$secrets_key")"
   upsert_env MCP_BEARER_TOKEN "$(quote_env "$mcp_token")"
@@ -378,6 +378,6 @@ cat > "$MANIFEST_FILE" <<EOF
 }
 EOF
 chmod 600 "$MANIFEST_FILE"
-printf 'Metis AI %s is running.\nOpen: http://%s:%s\nYou can change this. Add: %s\nApply: %s\n' "$VERSION" "$display_host" "$PORT" "$ENV_FILE" "$INSTALL_DIR/reload.sh"
+printf 'J.A.R.V.I.S. Mk3.1 %s is running.\nOpen: http://%s:%s\nYou can change this. Add: %s\nApply: %s\n' "$VERSION" "$display_host" "$PORT" "$ENV_FILE" "$INSTALL_DIR/reload.sh"
 printf 'Install manifest: %s\n' "$MANIFEST_FILE"
 printf 'Upgrade: rerun this installer with --version vX.Y.Z or --version latest\n'

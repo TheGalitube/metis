@@ -106,9 +106,9 @@ test("linux systemd services apply a hardened sandbox around app and worker", ()
 
   for (const file of ["install/linux.sh", "public/install/linux.sh"]) {
     const source = readFileSync(path.join(root, file), "utf8");
-    assert.match(source, /write_unit "\$\{service_name\}\.service" "Metis AI" full true/);
-    assert.match(source, /write_unit "\$\{service_name\}-worker\.service" "Metis AI worker" full true/);
-    assert.match(source, /write_unit "\$\{service_name\}-mcp\.service" "Metis AI MCP gateway" false false/);
+    assert.match(source, /write_unit "\$\{service_name\}\.service" "J\.A\.R\.V\.I\.S\. Mk3\.1" full true/);
+    assert.match(source, /write_unit "\$\{service_name\}-worker\.service" "J\.A\.R\.V\.I\.S\. Mk3\.1 worker" full true/);
+    assert.match(source, /write_unit "\$\{service_name\}-mcp\.service" "J\.A\.R\.V\.I\.S\. Mk3\.1 MCP gateway" false false/);
     assert.match(source, /NoNewPrivileges=\$no_new_privileges/);
     assert.match(source, /ProtectSystem=\$protect_system/);
     assert.match(source, /if \[\[ "\$protect_system" == "full" \]\]; then/);
@@ -201,7 +201,7 @@ test("the release script publishes every installer option", () => {
   assert.match(release, /metis-windows\.ps1/);
   assert.match(release, /raw\.githubusercontent\.com\/\$\{repo\}\/master\/install\.sh/);
   assert.match(release, /raw\.githubusercontent\.com\/\$\{repo\}\/master\/install\.ps1/);
-  assert.match(release, /ghcr\.io\/f1shyondrugs\/metis-ai/);
+  assert.match(release, /ghcr\.io\/thegalitube\/jarvis-mk3-1/);
   assert.match(release, /--docker/);
   assert.doesNotMatch(release, /github\.com\/\$\{owner\}\/metis-ai\/releases/);
 });
@@ -210,8 +210,8 @@ test("unix bootstrap remaps the v1.0.0 install base to current master scripts", 
   const bootstrap = readFileSync(path.join(root, "install.sh"), "utf8");
   const published = readFileSync(path.join(installerDir, "install.sh"), "utf8");
   for (const source of [bootstrap, published]) {
-    assert.match(source, /raw\.githubusercontent\.com\/f1shyondrugs\/metis-ai\/v1\.0\.0/);
-    assert.match(source, /base="https:\/\/raw\.githubusercontent\.com\/f1shyondrugs\/metis-ai\/master"/);
+    assert.match(source, /raw\.githubusercontent\.com\/TheGalitube\/Jarvis-Mk3\.1\/v1\.0\.0/);
+    assert.match(source, /base="https:\/\/raw\.githubusercontent\.com\/TheGalitube\/Jarvis-Mk3\.1\/master"/);
   }
 });
 
@@ -285,7 +285,7 @@ test("interactive installers ask for the install directory before making changes
   assert.ok(windows.includes('$InstallDir = Ask "Installation directory" $InstallDir'));
 });
 
-test("installers honor an explicit install directory in non-interactive dry-runs", () => {
+test("installers honor an explicit install directory in non-interactive dry-runs", { skip: process.platform === "win32" ? "requires /bin/bash" : false }, () => {
   const customDir = path.join(os.tmpdir(), "metis-custom-install");
   for (const file of ["linux.sh", "macos.sh"]) {
     const output = execFileSync(
@@ -311,7 +311,7 @@ test("installers detect an existing Metis install from OS services", () => {
   assert.match(macos, /Choice \[u\/r\/n\/a\]/);
   assert.match(windows, /CurrentVersion\\Run/);
   assert.match(windows, /Choice \[u\/r\/n\/a\]/);
-  assert.match(docker, /systemctl cat metis-ai\.service/);
+  assert.match(docker, /systemctl cat jarvis-mk3-1-workspace\.service/);
   assert.match(docker, /--replace-existing/);
   assert.doesNotMatch(linux, /if \[\[ -f "\$dir\/uninstall\.sh" \]\]/);
   assert.doesNotMatch(linux, /bash "\$uninstaller" --install-dir/);
@@ -323,7 +323,7 @@ test("installers detect an existing Metis install from OS services", () => {
   assert.match(windows, /Uninstall-DetectedInstall/);
   assert.match(windows, /metis-keep-data/);
   assert.doesNotMatch(docker, /existing_native_dir:-\}\/uninstall\.sh/);
-  assert.match(docker, /Stopping native Metis AI/);
+  assert.match(docker, /Stopping native J\.A\.R\.V\.I\.S\. Mk3\.1/);
   const uninstall = readFileSync(path.join(root, "install", "uninstall.sh"), "utf8");
   assert.match(uninstall, /discover_install_dir/);
   assert.match(uninstall, /WorkingDirectory/);
@@ -358,7 +358,7 @@ test("windows services start with an absolute node path and short cmd wrappers",
   assert.match(uninstall, /function Remove-Tree/);
 });
 
-test("installers merge a previous .env on replace and upgrade", () => {
+test("installers merge a previous .env on replace and upgrade", { skip: process.platform === "win32" ? "requires POSIX awk" : false }, () => {
   const linux = readFileSync(path.join(root, "install", "linux.sh"), "utf8");
   const macos = readFileSync(path.join(root, "install", "macos.sh"), "utf8");
   const windows = readFileSync(path.join(root, "install", "windows.ps1"), "utf8");
@@ -445,10 +445,11 @@ test("installers merge a previous .env on replace and upgrade", () => {
   }
 });
 
-test("README documents the bootstrap one-liner rather than curling platform scripts into bash", () => {
+test("README documents authenticated Linux source installation", () => {
   const readme = readFileSync(path.join(root, "README.md"), "utf8");
-  assert.match(readme, /\/bin\/bash -c "\$\(curl -fsSL https:\/\/raw\.githubusercontent\.com\/f1shyondrugs\/metis\/master\/install\.sh\)"/);
-  assert.match(readme, /irm https:\/\/raw\.githubusercontent\.com\/f1shyondrugs\/metis\/master\/install\.ps1 \| iex/);
+  assert.match(readme, /git clone https:\/\/github\.com\/TheGalitube\/Jarvis-Mk3\.1\.git/);
+  assert.match(readme, /bash deploy\/install-jarvis-linux\.sh/);
+  assert.doesNotMatch(readme, /raw\.githubusercontent\.com/);
   assert.doesNotMatch(readme, /install\/linux\.sh \| bash/);
   assert.doesNotMatch(readme, /install\/macos\.sh \| bash/);
   assert.doesNotMatch(readme, /install\/windows\.ps1 \| iex/);
@@ -499,7 +500,7 @@ test("platform installers accept uninstall and pin a release with --version", ()
   assert.match(windows, /git -C \$InstallDir checkout --force \$Version/);
 });
 
-test("linux and macos installers start when HOME is unset", () => {
+test("linux and macos installers start when HOME is unset", { skip: process.platform === "win32" ? "requires /bin/bash" : false }, () => {
   const env: NodeJS.ProcessEnv = { PATH: process.env.PATH || "/usr/bin:/bin", NODE_ENV: "test" };
   for (const file of ["linux.sh", "macos.sh"]) {
     const output = execFileSync("/bin/bash", [path.join(root, "install", file), "--help"], {
