@@ -1,8 +1,8 @@
 # J.A.R.V.I.S. Mk3.1 from a public Docker image on Ubuntu
 
-This path does not clone the private source repository on the server. GitHub Actions builds the image after the `master` CI job passes and pushes `ghcr.io/thegalitube/jarvis-mk3.1:latest` and a commit-specific `sha-...` tag. The image contains the application source and dependencies. Publishing the package publicly makes that content downloadable by anyone.
+This path does not clone source on the server. GitHub Actions in the separate [Jarvis-Mk3.1](https://github.com/TheGalitube/Jarvis-Mk3.1) repository builds `ghcr.io/thegalitube/jarvis-mk3.1:latest` and commit-specific `sha-...` tags. The public image contains the application source and dependencies. Changes to this fork do not automatically update that image.
 
-**Do not run the server commands until the image has actually been published.** The first GHCR publication is private by default. The repository owner must set the container package visibility to **Public** in GitHub Packages after the first successful `publish-image` job. Confirm that an unauthenticated `docker pull ghcr.io/thegalitube/jarvis-mk3.1:latest` works before proceeding. A failed pull means the image does not exist yet or is not public; stop there.
+The image is public. Confirm that `docker pull ghcr.io/thegalitube/jarvis-mk3.1:latest` succeeds before proceeding. If the pull fails, stop and verify the image tag and package visibility.
 
 ## First install as root on Ubuntu
 

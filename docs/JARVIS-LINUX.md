@@ -1,6 +1,6 @@
 # J.A.R.V.I.S. Mk3.1 on Linux
 
-Mk3.1 is built from this private source checkout. The upstream `latest` Docker installer and GHCR image are not used. The first install script is intentionally Linux-only; this Windows development PC is not a deployment target.
+Mk3.1 can be built from this public fork. The upstream Metis `latest` Docker installer and GHCR image are not used by this source-install path. The install script is Linux-only.
 
 ## Services and boundaries
 
@@ -15,7 +15,7 @@ The Core and workspace have separate databases and credentials. Installing Mk3.1
 
 ## First install
 
-Use a dedicated non-root Linux account that can run Docker Compose v2. Clone this private repository with that account. Review the checked-out commit and run:
+Use a dedicated non-root Linux account that can run Docker Compose v2. Clone this public fork with that account. Review the checked-out commit and run:
 
 ```bash
 bash deploy/install-jarvis-linux.sh --dry-run
@@ -46,7 +46,7 @@ tar -czf "$backup" .env data workspace
 docker compose --project-name jarvis-mk3-1 start
 ```
 
-Use a reviewed Mk3.1 commit from this private repository, then rebuild locally:
+Use a reviewed Mk3.1 commit from this fork, then rebuild locally:
 
 ```bash
 git fetch origin
@@ -56,7 +56,7 @@ docker compose --project-name jarvis-mk3-1 ps
 curl --fail http://127.0.0.1:3100/
 ```
 
-Check a login, a harmless agent task, saved data after a restart, and the Jarvis bridge only if enabled. Do not restore an older database over a live service; stop the containers first. If a schema migration occurred, recover the matching code and data backup together. Mk3.1's in-app self-update is disabled until private release images and upgrade tests are published.
+Check a login, a harmless agent task, saved data after a restart, and the Jarvis bridge only if enabled. Do not restore an older database over a live service; stop the containers first. If a schema migration occurred, recover the matching code and data backup together. Mk3.1's in-app self-update remains disabled until the upgrade path is tested.
 
 ## Verification still needed on the destination host
 

@@ -1,20 +1,20 @@
 # J.A.R.V.I.S. Mk3.1
 
-Private, self-hosted agent workspace for the existing J.A.R.V.I.S. Mk3 core. This repository is based on [Metis](https://github.com/f1shyondrugs/metis) at commit `e95b94d3844da52db263c2f89d3068796c3cb787` (23 September 2026). Its Git history and MIT license are retained; the original README is archived in [docs/METIS-UPSTREAM-README.md](docs/METIS-UPSTREAM-README.md).
+Self-hosted agent workspace for the existing J.A.R.V.I.S. Mk3 core. This public repository is a fork of [Metis](https://github.com/f1shyondrugs/metis). The Jarvis changes began at Metis commit `e95b94d3844da52db263c2f89d3068796c3cb787` and were merged with the newer upstream master when this fork was created. Metis Git history and its MIT license are retained; the original README is archived in [docs/METIS-UPSTREAM-README.md](docs/METIS-UPSTREAM-README.md).
 
 Mk3.1 uses the Metis Next.js workspace, worker and MCP gateway. The original [Jarvis Mk3](https://github.com/Galitube-Developement/Jarvis-Mk3) remains a separate Python service with its own SQLite database, task queue, approval policy and Codex/Hermes credentials. An optional, server-side MCP bridge provides limited health and task operations; see [docs/JARVIS-BRIDGE.md](docs/JARVIS-BRIDGE.md). The two databases are not merged.
 
 ## Ubuntu install from the published image
 
-The public GHCR image lets an Ubuntu server pull and run Mk3.1 without GitHub SSH access or a source checkout. It runs the app, worker, and MCP gateway as three Compose services. Follow [docs/JARVIS-IMAGE-UBUNTU.md](docs/JARVIS-IMAGE-UBUNTU.md) for the root-user install, SSH tunnel, backup, and upgrade steps. The image becomes available for anonymous pulls after the first successful CI publication and the package is made public in GitHub Packages.
+The public `ghcr.io/thegalitube/jarvis-mk3.1:latest` image lets an Ubuntu server run Mk3.1 without a source checkout. It runs the app, worker, and MCP gateway as three Compose services. Follow [docs/JARVIS-IMAGE-UBUNTU.md](docs/JARVIS-IMAGE-UBUNTU.md) for installation, backup, and upgrades. The image is currently published from the separate [Jarvis-Mk3.1](https://github.com/TheGalitube/Jarvis-Mk3.1) repository; commits in this fork do not automatically rebuild that image.
 
 ## Linux install from source
 
-Use an authenticated checkout of this private repository on the Linux host. Docker Engine with Compose v2 is required. Keep this checkout, its data directory and its workspace under a dedicated non-root service account. Ports default to loopback; the MCP gateway is reachable only inside the Compose network.
+Clone this public fork on the Linux host. Docker Engine with Compose v2 is required. Keep the checkout, its data directory and its workspace under a dedicated non-root service account. Ports default to loopback; the MCP gateway is reachable only inside the Compose network.
 
 ```bash
-git clone https://github.com/TheGalitube/Jarvis-Mk3.1.git
-cd Jarvis-Mk3.1
+git clone https://github.com/TheGalitube/metis.git jarvis-mk3-1
+cd jarvis-mk3-1
 bash deploy/install-jarvis-linux.sh --dry-run
 bash deploy/install-jarvis-linux.sh
 ```
@@ -38,6 +38,6 @@ The workspace defaults to `127.0.0.1:3100`. Provider credentials are configured 
 
 ## Release status
 
-`3.1.0` is the Mk3.1 source version. No Mk3.1 GitHub Release, GHCR image or Linux production deployment has been published or verified yet. Use the checked-out source and the Linux procedure above for a first deployment, then run the smoke checks on the actual Linux host before treating it as production-ready.
+`3.1.0` is the Mk3.1 source version. The public GHCR image is available and has been started on an Ubuntu server. This fork's merged source passed the GitHub CI typecheck, release tests, Linux installer checks, Docker build, and container smoke tests. No GitHub Release has been published for this fork. Image deployments continue to use the separate image repository described above.
 
 Metis and its contributors retain the copyright and license notices in [LICENSE](LICENSE). See [docs/README.md](docs/README.md), [SECURITY.md](SECURITY.md), and [docs/METIS-UPSTREAM-README.md](docs/METIS-UPSTREAM-README.md) for inherited architecture and security details.
