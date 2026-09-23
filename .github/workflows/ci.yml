@@ -107,7 +107,7 @@ jobs:
 
   publish-image:
     name: Publish GHCR image
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master' && github.repository == 'TheGalitube/Jarvis-Mk3.1'
     needs: validate
     runs-on: ubuntu-latest
     timeout-minutes: 45
