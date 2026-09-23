@@ -23,6 +23,9 @@ async function requireHostAdmin(req: Request, message: string) {
 export async function GET(req: Request) {
   const access = await requireHostAdmin(req, "Only host administrators can check for updates.");
   if ("response" in access) return access.response;
+  if (process.env.JARVIS_ENABLE_SELF_UPDATE !== "1") {
+    return Response.json({ error: "Self-update is disabled for J.A.R.V.I.S. Mk3.1 until private release images and upgrade tests are available. Use the reviewed Linux source deployment procedure." }, { status: 409 });
+  }
   try {
     const searchParams = new URL(req.url).searchParams;
     const jobId = searchParams.get("job");
@@ -43,8 +46,11 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const access = await requireHostAdmin(req, "Only host administrators can update Metis.");
+  const access = await requireHostAdmin(req, "Only host administrators can update J.A.R.V.I.S. Mk3.1.");
   if ("response" in access) return access.response;
+  if (process.env.JARVIS_ENABLE_SELF_UPDATE !== "1") {
+    return Response.json({ error: "Self-update is disabled for J.A.R.V.I.S. Mk3.1 until private release images and upgrade tests are available. Use the reviewed Linux source deployment procedure." }, { status: 409 });
+  }
 
   let requestedTag: string | undefined;
   let requestedCommit: string | undefined;
@@ -85,7 +91,7 @@ export async function POST(req: Request) {
         jobId: job.jobId,
         latestTag: release?.tag_name,
         latestCommit: commit?.sha,
-        message: `Installing ${label}. Metis will show the updating screen until the installer finishes and restarts the services.`,
+        message: `Installing ${label}. J.A.R.V.I.S. Mk3.1 will show the updating screen until the installer finishes and restarts the services.`,
       }, { status: 202 });
     }
 
@@ -120,7 +126,7 @@ export async function POST(req: Request) {
       jobId: job.jobId,
       latestTag: update.latestTag,
       latestCommit: update.latestCommit,
-      message: "Installer update started. Metis will show the updating screen until the installer finishes and restarts the services.",
+      message: "Installer update started. J.A.R.V.I.S. Mk3.1 will show the updating screen until the installer finishes and restarts the services.",
     }, { status: 202 });
   } catch (error) {
     const detail = error && typeof error === "object" && "stderr" in error
@@ -128,7 +134,7 @@ export async function POST(req: Request) {
       : "";
     return Response.json({
       status: "failed",
-      error: `${error instanceof Error ? error.message : "Metis update failed."}${detail ? `: ${detail.slice(-800)}` : ""}`,
+      error: `${error instanceof Error ? error.message : "J.A.R.V.I.S. Mk3.1 update failed."}${detail ? `: ${detail.slice(-800)}` : ""}`,
     }, { status: 500 });
   }
 }

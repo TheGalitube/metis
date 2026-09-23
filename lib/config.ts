@@ -34,8 +34,8 @@ function internalUrl(name: string, route: string) {
 }
 
 export const config = {
-  appName: env("APP_NAME") || "Metis AI",
-  appDescription: env("APP_DESCRIPTION") || "A private, configurable AI agent workspace.",
+  appName: env("APP_NAME") || "J.A.R.V.I.S. Mk3.1",
+  appDescription: env("APP_DESCRIPTION") || "Private agent workspace for the J.A.R.V.I.S. Mk3 core.",
   chatUsername: env("CHAT_USERNAME") || "admin",
   agentCwd: env("AGENT_CWD") || env("HOME") || os.homedir() || process.cwd(),
   root,
@@ -56,7 +56,7 @@ export const config = {
   automationUrl: internalUrl("AI_CHAT_AUTOMATION_URL", "/api/internal/mcp-automation"),
   fileUrl: internalUrl("AI_CHAT_FILE_URL", "/api/internal/mcp-file"),
   publicUrl,
-  serviceName: env("AI_CHAT_SERVICE_NAME") || "metis-ai",
+  serviceName: env("AI_CHAT_SERVICE_NAME") || "jarvis-mk3-1-workspace",
   port,
   mcpPort: numberEnv("MCP_PORT", 8787),
   mcpPublicUrl: rewriteDockerServiceUrl(

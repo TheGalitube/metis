@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, GFS_Didot } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
@@ -16,18 +16,11 @@ const geistMono = Geist_Mono({
   variable: "--font-mono",
 });
 
-const gfsDidot = GFS_Didot({
-  weight: "400",
-  subsets: ["greek", "latin"],
-  variable: "--font-wordmark",
-  display: "swap",
-});
-
 export const metadata: Metadata = {
   title: config.appName,
   description: config.appDescription,
   icons: {
-    icon: "/favicon.ico",
+    icon: "/jarvis-mark.svg",
   },
 };
 
@@ -46,7 +39,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={cn("dark font-sans", geist.variable, geistMono.variable, gfsDidot.variable)}
+      className={cn("dark font-sans", geist.variable, geistMono.variable)}
     >
       <body className="min-h-dvh bg-background text-foreground">
         <TooltipProvider delayDuration={200}>

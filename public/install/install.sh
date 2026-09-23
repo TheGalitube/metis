@@ -7,17 +7,17 @@
 # normal command.
 #
 # Interactive (stdin stays on the terminal):
-#   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/f1shyondrugs/metis-ai/master/install.sh)"
+#   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/TheGalitube/Jarvis-Mk3.1/master/install.sh)"
 #
 # Piped (still safe: the body is a function, so Bash parses the whole file
 # before doing any work, then re-execs from a real file):
-#   curl -fsSL https://raw.githubusercontent.com/f1shyondrugs/metis-ai/master/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/TheGalitube/Jarvis-Mk3.1/master/install.sh | bash
 #
 # Arguments:
-#   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/f1shyondrugs/metis-ai/master/install.sh)" -- --non-interactive --port 3100
+#   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/TheGalitube/Jarvis-Mk3.1/master/install.sh)" -- --non-interactive --port 3100
 #
 # Uninstall:
-#   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/f1shyondrugs/metis-ai/master/install.sh)" -- uninstall --yes --keep-data
+#   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/TheGalitube/Jarvis-Mk3.1/master/install.sh)" -- uninstall --yes --keep-data
 
 set -euo pipefail
 
@@ -45,12 +45,12 @@ metis_download_and_exec() {
 
 metis_install() {
   local base script
-  base="${METIS_AI_INSTALL_BASE:-https://raw.githubusercontent.com/f1shyondrugs/metis-ai/master}"
+  base="${METIS_AI_INSTALL_BASE:-https://raw.githubusercontent.com/TheGalitube/Jarvis-Mk3.1/master}"
   base="${base%/}"
   # v1.0.0 platform scripts cannot compile node-pty on minimal Ubuntu (no make).
   # Native one-liners pin INSTALL_BASE to that tag; fetch current scripts instead.
-  if [[ "$base" == "https://raw.githubusercontent.com/f1shyondrugs/metis-ai/v1.0.0" ]]; then
-    base="https://raw.githubusercontent.com/f1shyondrugs/metis-ai/master"
+  if [[ "$base" == "https://raw.githubusercontent.com/TheGalitube/Jarvis-Mk3.1/v1.0.0" ]]; then
+    base="https://raw.githubusercontent.com/TheGalitube/Jarvis-Mk3.1/master"
   fi
   if [[ "${1:-}" == "uninstall" ]]; then
     case "$(uname -s)" in

@@ -57,6 +57,8 @@ export function nextUpdateAt(schedule = getUpdateSchedule(), from = new Date()) 
 let timer: NodeJS.Timeout | undefined;
 let running = false;
 export function startUpdateScheduler() {
+  // The fork has no private release assets yet. Never schedule an upstream installer by default.
+  if (process.env.JARVIS_ENABLE_SELF_UPDATE !== "1") return;
   if (timer) return;
   const tick = async () => {
     const schedule = getUpdateSchedule();

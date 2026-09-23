@@ -7,13 +7,13 @@ import { metisAgentIdentity } from "../lib/agent-identity";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-test("identity prompt names Metis AI and the harness", () => {
+test("identity prompt names J.A.R.V.I.S. Mk3.1 and the harness", () => {
   const identity = metisAgentIdentity();
-  assert.match(identity, /^You are Metis AI\./);
+  assert.match(identity, /^You are J\.A\.R\.V\.I\.S\. Mk3\.1\./);
   assert.match(identity, /application harness/);
   assert.match(identity, /not a generic Cursor assistant/);
   assert.match(identity, /remote-client connection are your own runtime/);
-  assert.match(identity, /metis-ai-e2e/);
+  assert.match(identity, /jarvis-mk3-1-e2e/);
 });
 
 test("cursor and provider runtimes inject the shared identity through their canonical prompt builders", () => {
@@ -26,6 +26,6 @@ test("cursor and provider runtimes inject the shared identity through their cano
   assert.match(promptContext, /import \{ metisAgentIdentity \} from "@\/lib\/agent-identity"/);
   assert.match(promptContext, /return\s+\[[\s\S]*?metisAgentIdentity\(\),/);
   assert.match(providerSupport, /buildProviderPrompt\(/);
-  assert.match(modes, /You are Metis AI, running in the Metis AI harness/);
+  assert.match(modes, /You are J\.A\.R\.V\.I\.S\. Mk3\.1, running in the J\.A\.R\.V\.I\.S\. workspace/);
   assert.doesNotMatch(promptContext, /You are a provider inside a private AI chat application/);
 });

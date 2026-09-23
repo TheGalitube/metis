@@ -705,7 +705,7 @@ export function AutomationsPanel({
         {!loading && !loadError && automations.length === 0 ? (
           <div className="automation-inline-state">
             <strong>No automations yet</strong>
-            <span>Use + to create one here, or ask Metis in a chat.</span>
+            <span>Use + to create one here, or ask J.A.R.V.I.S. in a chat.</span>
           </div>
         ) : null}
 

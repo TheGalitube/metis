@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Metis AI Linux installer. Run as a file, not via `curl | bash`.
-# Prefer: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/f1shyondrugs/metis-ai/master/install.sh)"
+# Prefer: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/TheGalitube/Jarvis-Mk3.1/master/install.sh)"
 set -Eeuo pipefail
 
 # systemd-run and other non-login environments omit HOME. `set -u` then
@@ -20,10 +20,10 @@ if [[ -z "${HOME:-}" ]]; then
   export HOME
 fi
 
-APP_NAME="Metis AI"
-REPO_URL="${METIS_AI_REPO_URL:-https://github.com/f1shyondrugs/metis-ai.git}"
+APP_NAME="J.A.R.V.I.S. Mk3.1"
+REPO_URL="${METIS_AI_REPO_URL:-https://github.com/TheGalitube/Jarvis-Mk3.1.git}"
 NODE_VERSION="${METIS_NODE_VERSION:-22.16.0}"
-DEFAULT_DIR="${METIS_AI_INSTALL_DIR:-$HOME/metis-ai}"
+DEFAULT_DIR="${METIS_AI_INSTALL_DIR:-$HOME/jarvis-mk3-1}"
 
 die() { printf 'Error: %s\n' "$*" >&2; exit 1; }
 
@@ -204,7 +204,7 @@ agent_cwd="$HOME"
 port="3100"
 ai_chat_host=""
 mcp_port="8787"
-service_name="metis-ai"
+service_name="jarvis-mk3-1-workspace"
 public_url=""
 force_native=0
 force_docker=0
@@ -255,7 +255,7 @@ if [[ "${1:-}" == "uninstall" ]]; then
   elif [[ -f "$self_dir/install/uninstall.sh" ]]; then
     uninstall_script="$self_dir/install/uninstall.sh"
   else
-    base="${METIS_AI_INSTALL_BASE:-https://raw.githubusercontent.com/f1shyondrugs/metis-ai/master}"
+    base="${METIS_AI_INSTALL_BASE:-https://raw.githubusercontent.com/TheGalitube/Jarvis-Mk3.1/master}"
     base="${base%/}"
     uninstall_script="$(mktemp "${TMPDIR:-/tmp}/metis-ai-uninstall.XXXXXX")"
     curl -fsSL "$base/install/uninstall.sh" -o "$uninstall_script" || die "failed to download the Metis AI uninstaller."
@@ -721,7 +721,7 @@ mcp_token="$(rand_hex)"
 mkdir -p "$data_dir" "$agent_cwd"
 adopt_env_stash "$install_dir"
 {
-  write_env_line APP_NAME "Metis AI"
+  write_env_line APP_NAME "J.A.R.V.I.S. Mk3.1"
   write_env_line PORT "$port"
   write_env_line AI_CHAT_HOST "$ai_chat_host"
   write_env_line CHAT_DATA_DIR "$data_dir"
@@ -854,12 +854,12 @@ SystemCallArchitectures=native
 WantedBy=multi-user.target
 EOF
   }
-  write_unit "${service_name}.service" "Metis AI" full true "$install_dir/node_modules/tsx/dist/cli.mjs" "$install_dir/server.mjs"
-  write_unit "${service_name}-worker.service" "Metis AI worker" full true "$install_dir/node_modules/tsx/dist/cli.mjs" "$install_dir/worker.ts"
+  write_unit "${service_name}.service" "J.A.R.V.I.S. Mk3.1" full true "$install_dir/node_modules/tsx/dist/cli.mjs" "$install_dir/server.mjs"
+  write_unit "${service_name}-worker.service" "J.A.R.V.I.S. Mk3.1 worker" full true "$install_dir/node_modules/tsx/dist/cli.mjs" "$install_dir/worker.ts"
   # The MCP gateway is the explicit host-administration boundary. It keeps
   # system writes and privilege transitions available, while app/worker agents
   # run with a read-only system tree and no-new-privileges.
-  write_unit "${service_name}-mcp.service" "Metis AI MCP gateway" false false "$install_dir/lib/mcp-core/gateway-core.mjs"
+  write_unit "${service_name}-mcp.service" "J.A.R.V.I.S. Mk3.1 MCP gateway" false false "$install_dir/lib/mcp-core/gateway-core.mjs"
   sudo systemctl daemon-reload
   sudo systemctl enable "${service_name}.service" "${service_name}-worker.service" "${service_name}-mcp.service"
   sudo systemctl restart "${service_name}.service" "${service_name}-worker.service" "${service_name}-mcp.service"
