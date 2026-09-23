@@ -54,7 +54,7 @@ jobs:
       - name: Check shell installers
         run: |
           set -euo pipefail
-          for file in install/*.sh public/install/*.sh deploy/install-jarvis-linux.sh; do
+          for file in install/*.sh public/install/*.sh deploy/install-jarvis-linux.sh deploy/install-jarvis-image-linux.sh; do
             bash -n "$file"
           done
 
@@ -93,3 +93,46 @@ jobs:
           docker compose --project-name jarvis-mk3-1-ci config --quiet
           docker compose --project-name jarvis-mk3-1-ci up --no-build -d --wait
           curl --fail --silent --show-error http://127.0.0.1:3100/ >/dev/null
+
+      - name: Smoke-test pull-only Compose services
+        run: |
+          set -euo pipefail
+          cp deploy/compose-image.yml compose-image.yml
+          export JARVIS_IMAGE=jarvis-mk3-1:local
+          cleanup() { docker compose -f compose-image.yml --project-name jarvis-mk3-1-image-ci down --remove-orphans >/dev/null 2>&1 || true; }
+          trap cleanup EXIT
+          docker compose -f compose-image.yml --project-name jarvis-mk3-1-image-ci config --quiet
+          docker compose -f compose-image.yml --project-name jarvis-mk3-1-image-ci up --no-build -d --wait
+          curl --fail --silent --show-error http://127.0.0.1:3100/ >/dev/null
+
+  publish-image:
+    name: Publish GHCR image
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "${{ github.actor }}" --password-stdin
+
+      - name: Build image
+        run: |
+          docker build \
+            --platform linux/amd64 \
+            --build-arg METIS_RELEASE_COMMIT="${GITHUB_SHA}" \
+            --tag "ghcr.io/thegalitube/jarvis-mk3.1:sha-${GITHUB_SHA}" \
+            --tag ghcr.io/thegalitube/jarvis-mk3.1:latest \
+            .
+
+      - name: Push image
+        run: |
+          docker push "ghcr.io/thegalitube/jarvis-mk3.1:sha-${GITHUB_SHA}"
+          docker push ghcr.io/thegalitube/jarvis-mk3.1:latest

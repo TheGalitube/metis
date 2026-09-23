@@ -15,7 +15,8 @@ ENV METIS_RELEASE_TAG=$METIS_RELEASE_TAG
 ENV METIS_RELEASE_VERSION=$METIS_RELEASE_VERSION
 ENV METIS_RELEASE_COMMIT=$METIS_RELEASE_COMMIT
 LABEL org.opencontainers.image.version=$METIS_RELEASE_VERSION \
-      org.opencontainers.image.revision=$METIS_RELEASE_COMMIT
+      org.opencontainers.image.revision=$METIS_RELEASE_COMMIT \
+      org.opencontainers.image.source=https://github.com/TheGalitube/Jarvis-Mk3.1
 
 RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
 
