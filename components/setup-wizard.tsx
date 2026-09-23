@@ -172,9 +172,9 @@ export function SetupWizard({
   return (
     <HandsStage contentClassName="space-y-8">
       <div className="space-y-2">
-        <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Metis setup</p>
+        <p className="text-xs font-medium uppercase tracking-[0.18em] text-primary">J.A.R.V.I.S. setup</p>
         <h1 className="text-3xl font-semibold tracking-tight">
-          {step === "welcome" ? "Welcome to Metis" : step === "people" ? "People on this instance" : step === "provider" ? "Connect a provider" : "Metis is ready"}
+          {step === "welcome" ? "Welcome to J.A.R.V.I.S." : step === "people" ? "People on this instance" : step === "provider" ? "Connect a provider" : "J.A.R.V.I.S. is ready"}
         </h1>
         <p className="text-sm leading-6 text-muted-foreground">
           {step === "welcome"
@@ -293,7 +293,7 @@ export function SetupWizard({
 
       {step === "ready" ? (
         <Button type="button" className="h-11 min-h-11 rounded-xl" onClick={() => void finish()}>
-          Enter Metis <ArrowRight className="size-4" />
+          Enter J.A.R.V.I.S. <ArrowRight className="size-4" />
         </Button>
       ) : null}
     </HandsStage>

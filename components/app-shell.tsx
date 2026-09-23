@@ -97,8 +97,8 @@ import { VoiceInput } from "@/components/voice-input";
 import { RichUserText } from "@/components/rich-user-text";
 import { BrowserSettingsControls } from "@/components/browser-settings-controls";
 import { BrowserPageEmpty, BrowserPageSkeleton } from "@/components/browser-page-skeleton";
-import { UpdateStatusProbe } from "@/components/update-channel-nav";
 import { MaintenanceScreen } from "@/components/maintenance-screen";
+import { JarvisWordmark } from "@/components/jarvis-wordmark";
 import {
   INSTALLER_MAINTENANCE_EVENT,
   type InstallerMaintenanceDetail,
@@ -964,7 +964,7 @@ async function readJsonResponse<T>(response: Response): Promise<T> {
   if (!String(contentType ?? "").toLowerCase().includes("application/json")) {
     throw new Error(
       response.status === 404
-        ? "Browser API not found. Open Metis AI through its application server, not a static frontend server."
+        ? "Browser API not found. Open J.A.R.V.I.S. through its application server, not a static frontend server."
         : `Browser API returned an unexpected response (${response.status}).`,
     );
   }
@@ -2247,7 +2247,6 @@ export default function AppShell({ defaultCwd }: { defaultCwd: string }) {
   const [memories, setMemories] = useState<MemoryItem[]>([]);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsTab, setSettingsTab] = useState("general");
-  const [settingsUpdateAvailable, setSettingsUpdateAvailable] = useState(false);
   const [chatLogsOpen, setChatLogsOpen] = useState(false);
   const [chatLogs, setChatLogs] = useState<ChatLogEntry[]>([]);
   const [chatLogsChatId, setChatLogsChatId] = useState<string | null>(null);
@@ -6007,21 +6006,11 @@ export default function AppShell({ defaultCwd }: { defaultCwd: string }) {
   async function resetMetis() {
     const response = await fetch("/api/admin/reset", { method: "POST" });
     const data = (await response.json().catch(() => ({}))) as { error?: string };
-    if (!response.ok) throw new Error(data.error || "Metis reset failed.");
+    if (!response.ok) throw new Error(data.error || "J.A.R.V.I.S. reset failed.");
     window.localStorage.clear();
     window.sessionStorage.clear();
-    toast.success("Metis was reset. Showing the initial setup.");
+    toast.success("J.A.R.V.I.S. was reset. Showing the initial setup.");
     window.location.assign("/");
-  }
-
-  async function updateMetis() {
-    const response = await fetch("/api/admin/system/update", { method: "POST" });
-    const data = (await response.json().catch(() => ({}))) as {
-      error?: string;
-      message?: string;
-    };
-    if (!response.ok) throw new Error(data.error || "Metis update failed.");
-    toast.success(data.message || "Metis update prepared.");
   }
 
   async function toggleIncognito() {
@@ -9071,7 +9060,7 @@ export default function AppShell({ defaultCwd }: { defaultCwd: string }) {
               void send(e);
             }
             }}
-            placeholder="Message Metis…"
+            placeholder="Message J.A.R.V.I.S.…"
             className={cn("max-sm:min-h-9 max-sm:px-3 max-sm:py-1.5 max-sm:text-[15px]", voiceRecording && voiceState === "recording" ? "opacity-0" : "dark:bg-transparent")}
             aria-label="Message"
           />
@@ -9353,26 +9342,12 @@ export default function AppShell({ defaultCwd }: { defaultCwd: string }) {
     <div className="flex h-full min-w-0 flex-col overflow-hidden">
       <div
         className={cn(
-          "relative z-10 shrink-0 items-center justify-center px-3 pb-2 pt-6",
+          "relative z-10 shrink-0 items-center justify-start px-4 pb-4 pt-5",
           mobile ? "flex md:hidden" : "hidden md:flex",
         )}
-        aria-label="Metis"
+        aria-label="J.A.R.V.I.S. Mk3.1"
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/hand-left.png"
-          alt=""
-          aria-hidden="true"
-          className="absolute left-0 z-10 h-9 w-auto max-w-[5rem] object-contain"
-        />
-        <span lang="grc" className="metis-wordmark relative z-20 text-foreground/90">Μῆτις</span>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/hand-right.png"
-          alt=""
-          aria-hidden="true"
-          className="absolute right-0 z-10 h-9 w-auto max-w-[5rem] object-contain"
-        />
+        <JarvisWordmark />
       </div>
       <div className="relative z-0 shrink-0 px-2 pb-1 pt-3">
         <button
@@ -9675,16 +9650,7 @@ export default function AppShell({ defaultCwd }: { defaultCwd: string }) {
             setSettingsOpen(true);
           }}
         >
-          <span className="relative shrink-0">
-            <Settings className="size-3.5" />
-            {settingsUpdateAvailable ? (
-              <span
-                className="absolute -right-1 -top-1 size-2 rounded-full bg-emerald-500 ring-2 ring-background"
-                aria-label="Update Available"
-                title="Update Available"
-              />
-            ) : null}
-          </span>
+          <Settings className="size-3.5 shrink-0" />
           <span className="truncate">Settings</span>
         </Button>
       </div>
@@ -9781,9 +9747,12 @@ export default function AppShell({ defaultCwd }: { defaultCwd: string }) {
     return (
       <main className="flex min-h-dvh items-center justify-center p-8">
         <form onSubmit={login} className="w-full max-w-[320px] space-y-4">
-          <div className="space-y-1 text-center">
-            <h1 className="text-base font-medium">Sign in</h1>
-            <p className="text-sm text-muted-foreground">Password</p>
+          <div className="flex flex-col items-center gap-4 text-center">
+            <JarvisWordmark />
+            <div className="space-y-1">
+              <h1 className="text-base font-medium">Sign in</h1>
+              <p className="text-sm text-muted-foreground">Password</p>
+            </div>
           </div>
           <Input
             value={username}
@@ -9830,10 +9799,6 @@ export default function AppShell({ defaultCwd }: { defaultCwd: string }) {
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      <UpdateStatusProbe
-        isHostAdmin={Boolean(status?.isHostAdmin)}
-        onUpdateAvailableChange={setSettingsUpdateAvailable}
-      />
       <CommandPalette
         open={commandPaletteOpen}
         onOpenChange={setCommandPaletteOpen}
@@ -9932,7 +9897,7 @@ export default function AppShell({ defaultCwd }: { defaultCwd: string }) {
       {desktopSidebarMounted ? (
         <aside
           className={cn(
-            "relative hidden shrink-0 overflow-hidden border-r border-border/40 transition-[width] duration-200 md:block",
+            "jarvis-sidebar relative hidden shrink-0 overflow-hidden border-r border-border/40 transition-[width] duration-200 md:block",
             desktopSidebarOpen ? "sidebar-panel-enter" : "sidebar-panel-exit",
           )}
           style={{ width: desktopSidebarOpen ? `${sidebarWidth}px` : "0px" }}
@@ -9959,7 +9924,7 @@ export default function AppShell({ defaultCwd }: { defaultCwd: string }) {
         <aside
           aria-label="Chats sidebar"
           className={cn(
-            "fixed inset-y-0 left-0 z-40 w-[min(20rem,calc(100vw-2.75rem))] border-r border-border/40 bg-popover shadow-2xl transition-transform duration-200 ease-out",
+            "jarvis-sidebar fixed inset-y-0 left-0 z-40 w-[min(20rem,calc(100vw-2.75rem))] border-r border-border/40 shadow-2xl transition-transform duration-200 ease-out",
             mobileNavOpen ? "visible translate-x-0" : "invisible -translate-x-full",
           )}
           onTouchStart={handleTouchStart}
@@ -9971,7 +9936,7 @@ export default function AppShell({ defaultCwd }: { defaultCwd: string }) {
 
       <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
         {/* Thin top bar */}
-        <header className="relative z-20 flex h-14 shrink-0 items-center gap-2.5 border-b border-border/55 bg-background px-3.5 md:h-12 md:gap-2 md:px-4">
+        <header className="jarvis-app-header relative z-20 flex h-14 shrink-0 items-center gap-2.5 border-b border-border/55 px-3.5 md:h-12 md:gap-2 md:px-4">
           <Button
             variant="ghost"
             size="icon"
@@ -10138,7 +10103,7 @@ export default function AppShell({ defaultCwd }: { defaultCwd: string }) {
         ) : isEmpty ? (
           <div
             className={cn(
-              "flex min-h-0 flex-1 flex-col items-center px-4",
+              "jarvis-empty-state flex min-h-0 flex-1 flex-col items-center px-4",
               queuedMessages.length ? "justify-end pb-10 sm:pb-8" : "justify-center pb-[10svh] sm:pb-8",
             )}
           >
@@ -10148,6 +10113,11 @@ export default function AppShell({ defaultCwd }: { defaultCwd: string }) {
             )}>
               {greeting}
             </h2>
+            {!incognito ? (
+              <p className="mb-8 text-center text-base text-muted-foreground sm:text-lg">
+                What shall we work on?
+              </p>
+            ) : null}
             {incognito ? (
               <p className="mb-8 max-w-md animate-in fade-in slide-in-from-top-1 text-center text-sm leading-relaxed text-muted-foreground duration-500">
                 Incognito mode is active. This chat is temporary and won&apos;t use or save your personal context.
@@ -11363,7 +11333,7 @@ export default function AppShell({ defaultCwd }: { defaultCwd: string }) {
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <div className="min-w-0">
                           <p className="font-medium">Browser engine isn’t installed</p>
-                          <p className="mt-0.5 text-muted-foreground">Metis needs Chromium for the embedded browser.</p>
+                          <p className="mt-0.5 text-muted-foreground">J.A.R.V.I.S. needs Chromium for the embedded browser.</p>
                         </div>
                         <Button type="button" size="sm" variant="secondary" className="h-7 shrink-0 gap-1.5" onClick={() => void installBrowser()} disabled={browserInstalling}>
                           {browserInstalling ? <LoaderCircle className="size-3.5 animate-spin" /> : <Download className="size-3.5" />}
@@ -12019,7 +11989,6 @@ export default function AppShell({ defaultCwd }: { defaultCwd: string }) {
         onModesChanged={() => void loadModes()}
         onLogout={() => void logout()}
         onResetMetis={resetMetis}
-        onUpdateMetis={updateMetis}
         isHostAdmin={Boolean(status?.isHostAdmin)}
       />
 

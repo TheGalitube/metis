@@ -1,6 +1,6 @@
-# Metis AI documentation
+# J.A.R.V.I.S. Mk3.1 documentation
 
-Canonical docs live here. Root keeps only GitHub/agent entry points: `README.md`, `LICENSE`, `AGENTS.md`, `CONTRIBUTING.md`, `SECURITY.md`.
+This repository retains Metis documentation as an upstream reference. Start with the Mk3.1 deployment and bridge guides below. Root keeps only GitHub/agent entry points: `README.md`, `LICENSE`, `AGENTS.md`, `CONTRIBUTING.md`, `SECURITY.md`.
 
 **Last review:** 11 Sep 2026. Open production issues are in [PRODUCTION-AUDIT.md](./PRODUCTION-AUDIT.md). Do not stop live `metis-ai` / worker / MCP units as a side effect of tests.
 
@@ -8,6 +8,9 @@ Canonical docs live here. Root keeps only GitHub/agent entry points: `README.md`
 
 | Doc | What it is |
 | --- | --- |
+| [JARVIS-IMAGE-UBUNTU.md](./JARVIS-IMAGE-UBUNTU.md) | Ubuntu root install from the public GHCR image without a source checkout |
+| [JARVIS-LINUX.md](./JARVIS-LINUX.md) | Mk3.1 Linux install, backup, upgrade and host verification |
+| [JARVIS-BRIDGE.md](./JARVIS-BRIDGE.md) | Optional bridge to the existing Python Core |
 | [PRODUCTION-AUDIT.md](./PRODUCTION-AUDIT.md) | Current P0/P1/P2 and leftover August findings (11 Sep 2026) |
 | [BUG_PRIORITY.md](./BUG_PRIORITY.md) | Priority list with **fixed vs open** status |
 | [SECURITY.md](../SECURITY.md) | Public-deployment checklist and vulnerability reporting |

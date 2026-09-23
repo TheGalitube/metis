@@ -29,6 +29,11 @@ package_version="$(node -p 'require("./package.json").version')"
   exit 2
 }
 
+[[ "${JARVIS_RELEASE_READY:-0}" == "1" ]] || {
+  echo "Mk3.1 release is blocked until the private image and Linux upgrade path are verified; set JARVIS_RELEASE_READY=1 after review." >&2
+  exit 2
+}
+
 command -v gh >/dev/null || { echo "gh CLI is required" >&2; exit 2; }
 command -v docker >/dev/null || { echo "docker is required" >&2; exit 2; }
 gh auth status >/dev/null
@@ -73,15 +78,12 @@ METIS_RELEASE_VERSION="$expected_version" \
 METIS_RELEASE_COMMIT="$commit" \
 pnpm build
 
-git tag -a "$tag" -m "Metis AI $tag"
-git push origin HEAD:master "$tag"
-
 work_dir="$(mktemp -d "${TMPDIR:-/tmp}/metis-release.XXXXXX")"
 cleanup() { rm -rf "$work_dir"; }
 trap cleanup EXIT
 
 version="${tag#v}"
-git archive --format=tar.gz --prefix="metis-ai-${version}/" "$tag" > "$work_dir/metis-ai-${tag}.tar.gz"
+git archive --format=tar.gz --prefix="metis-ai-${version}/" HEAD > "$work_dir/metis-ai-${tag}.tar.gz"
 cp public/install/install.sh "$work_dir/metis-install.sh"
 cp public/install/install.ps1 "$work_dir/metis-install.ps1"
 cp public/install/docker.sh "$work_dir/metis-docker-install.sh"
@@ -90,7 +92,7 @@ cp public/install/macos.sh "$work_dir/metis-macos.sh"
 cp public/install/windows.ps1 "$work_dir/metis-windows.ps1"
 sha256sum "$work_dir/metis-ai-${tag}.tar.gz" "$work_dir/metis-install.sh" "$work_dir/metis-install.ps1" "$work_dir/metis-docker-install.sh" "$work_dir/metis-linux.sh" "$work_dir/metis-macos.sh" "$work_dir/metis-windows.ps1" > "$work_dir/SHA256SUMS"
 
-image="${METIS_IMAGE_REPOSITORY:-ghcr.io/f1shyondrugs/metis-ai}"
+image="${METIS_IMAGE_REPOSITORY:-ghcr.io/thegalitube/jarvis-mk3-1}"
 gh auth token | docker login ghcr.io --username "$owner" --password-stdin >/dev/null
 docker buildx build --push \
   --tag "${image}:${tag}" \
@@ -100,6 +102,11 @@ docker buildx build --push \
   --build-arg "METIS_RELEASE_TAG=${tag}" \
   --build-arg "METIS_RELEASE_VERSION=${tag}" \
   --build-arg "METIS_RELEASE_COMMIT=$commit" .
+
+# Publish the tag only after the image exists; upstream v1.0.9 demonstrated why
+# a tag-first release can point the installer at an unpublished image.
+git tag -a "$tag" -m "J.A.R.V.I.S. Mk3.1 $tag"
+git push origin HEAD:master "$tag"
 
 notes_file="$work_dir/release-notes.md"
 {
@@ -162,7 +169,7 @@ EOF
 } > "$notes_file"
 
 gh release create "$tag" \
-  --title "Metis AI ${tag}" \
+  --title "J.A.R.V.I.S. Mk3.1 ${tag}" \
   --notes-file "$notes_file" \
   "$work_dir/metis-ai-${tag}.tar.gz" \
   "$work_dir/metis-install.sh" \

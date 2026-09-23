@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Metis AI macOS installer. Run as a file, not via `curl | bash`.
-# Prefer: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/f1shyondrugs/metis-ai/master/install.sh)"
+# Prefer: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/TheGalitube/Jarvis-Mk3.1/master/install.sh)"
 set -Eeuo pipefail
 
 # LaunchAgents and other non-login environments can omit HOME.
@@ -19,7 +19,7 @@ if [[ -z "${HOME:-}" ]]; then
   export HOME
 fi
 
-REPO_URL="${METIS_AI_REPO_URL:-https://github.com/f1shyondrugs/metis-ai.git}"
+REPO_URL="${METIS_AI_REPO_URL:-https://github.com/TheGalitube/Jarvis-Mk3.1.git}"
 DEFAULT_DIR="${METIS_AI_INSTALL_DIR:-$HOME/metis-ai}"
 
 die() { printf 'Error: %s\n' "$*" >&2; exit 1; }
@@ -220,7 +220,7 @@ if [[ "${1:-}" == "uninstall" ]]; then
   elif [[ -f "$self_dir/install/uninstall-macos.sh" ]]; then
     uninstall_script="$self_dir/install/uninstall-macos.sh"
   else
-    base="${METIS_AI_INSTALL_BASE:-https://raw.githubusercontent.com/f1shyondrugs/metis-ai/master}"
+    base="${METIS_AI_INSTALL_BASE:-https://raw.githubusercontent.com/TheGalitube/Jarvis-Mk3.1/master}"
     base="${base%/}"
     uninstall_script="$(mktemp "${TMPDIR:-/tmp}/metis-ai-uninstall.XXXXXX")"
     curl -fsSL "$base/install/uninstall-macos.sh" -o "$uninstall_script" || die "failed to download the Metis AI uninstaller."

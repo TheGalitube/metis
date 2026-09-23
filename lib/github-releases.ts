@@ -26,8 +26,8 @@ export {
 export type { UpdateCommitItem, UpdateReleaseItem, UpdateVersionList } from "@/lib/update-display";
 
 const execFileAsync = promisify(execFile);
-const RELEASE_URL = "https://api.github.com/repos/f1shyondrugs/metis-ai/releases/latest";
-const COMMIT_URL = "https://api.github.com/repos/f1shyondrugs/metis-ai/commits/master";
+const RELEASE_URL = "https://api.github.com/repos/TheGalitube/Jarvis-Mk3.1/releases/latest";
+const COMMIT_URL = "https://api.github.com/repos/TheGalitube/Jarvis-Mk3.1/commits/master";
 const USER_AGENT = "metis-ai-update-checker";
 const cache: { etag?: string; release?: GithubRelease; checkedAt?: number } = {};
 const CACHE_TTL_MS = 5 * 60_000;
@@ -124,7 +124,7 @@ function splitCommitMessage(message?: string) {
 export async function fetchReleaseByTag(tag: string, fetcher: typeof fetch = fetch): Promise<GithubRelease> {
   const normalized = normalizeReleaseTag(tag);
   if (!normalized) throw new Error("Release tag must look like v1.0.0.");
-  const response = await fetcher(`https://api.github.com/repos/f1shyondrugs/metis-ai/releases/tags/${encodeURIComponent(normalized)}`, {
+  const response = await fetcher(`https://api.github.com/repos/TheGalitube/Jarvis-Mk3.1/releases/tags/${encodeURIComponent(normalized)}`, {
     headers: githubHeaders(),
     cache: "no-store",
   });
@@ -137,7 +137,7 @@ export async function fetchReleaseByTag(tag: string, fetcher: typeof fetch = fet
 export async function fetchCommitBySha(sha: string, fetcher: typeof fetch = fetch): Promise<GithubCommit> {
   const value = sha.trim();
   if (!isGitCommitSha(value)) throw new Error("Commit must be a git SHA.");
-  const response = await fetcher(`https://api.github.com/repos/f1shyondrugs/metis-ai/commits/${encodeURIComponent(value)}`, {
+  const response = await fetcher(`https://api.github.com/repos/TheGalitube/Jarvis-Mk3.1/commits/${encodeURIComponent(value)}`, {
     headers: githubHeaders(),
     cache: "no-store",
   });
@@ -153,8 +153,8 @@ export async function listUpdateVersions(root: string, fetcher: typeof fetch = f
   const currentCommit = head || manifest.commit || null;
   const currentTag = manifest.tag || null;
   const [releasesResponse, commitsResponse] = await Promise.all([
-    fetcher("https://api.github.com/repos/f1shyondrugs/metis-ai/releases?per_page=20", { headers: githubHeaders(), cache: "no-store" }),
-    fetcher("https://api.github.com/repos/f1shyondrugs/metis-ai/commits?sha=master&per_page=30", { headers: githubHeaders(), cache: "no-store" }),
+    fetcher("https://api.github.com/repos/TheGalitube/Jarvis-Mk3.1/releases?per_page=20", { headers: githubHeaders(), cache: "no-store" }),
+    fetcher("https://api.github.com/repos/TheGalitube/Jarvis-Mk3.1/commits?sha=master&per_page=30", { headers: githubHeaders(), cache: "no-store" }),
   ]);
   if (!releasesResponse.ok) throw new Error(`GitHub release list failed (${releasesResponse.status}).`);
   if (!commitsResponse.ok) throw new Error(`GitHub commit list failed (${commitsResponse.status}).`);
@@ -168,7 +168,7 @@ export async function listUpdateVersions(root: string, fetcher: typeof fetch = f
         tag,
         name: release.name?.trim() || tag,
         body: release.body?.trim() || "",
-        htmlUrl: release.html_url || `https://github.com/f1shyondrugs/metis-ai/releases/tag/${encodeURIComponent(tag)}`,
+        htmlUrl: release.html_url || `https://github.com/TheGalitube/Jarvis-Mk3.1/releases/tag/${encodeURIComponent(tag)}`,
         publishedAt: release.published_at || null,
         prerelease: Boolean(release.prerelease),
         current: Boolean(currentTag && tag === currentTag),
@@ -183,7 +183,7 @@ export async function listUpdateVersions(root: string, fetcher: typeof fetch = f
         shortSha: commit.sha.slice(0, 12),
         title: split.title,
         body: split.body,
-        htmlUrl: commit.html_url || `https://github.com/f1shyondrugs/metis-ai/commit/${commit.sha}`,
+        htmlUrl: commit.html_url || `https://github.com/TheGalitube/Jarvis-Mk3.1/commit/${commit.sha}`,
         authoredAt: commit.commit?.author?.date || commit.commit?.committer?.date || null,
         author: commit.commit?.author?.name || commit.author?.login || null,
         current: sameGitSha(commit.sha, currentCommit),
@@ -413,7 +413,7 @@ export async function prepareNativeCommitUpdate(
   try {
     operation = `downloading master commit ${sha.slice(0, 12)}`;
     log(operation);
-    const response = await fetcher(`https://github.com/f1shyondrugs/metis-ai/archive/${sha}.tar.gz`, {
+    const response = await fetcher(`https://github.com/TheGalitube/Jarvis-Mk3.1/archive/${sha}.tar.gz`, {
       headers: { "User-Agent": USER_AGENT, Accept: "application/octet-stream" },
       cache: "no-store",
     });
