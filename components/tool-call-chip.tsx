@@ -359,7 +359,7 @@ export const ToolCallChip = memo(function ToolCallChip({
   const resolvedName = display.name || name;
   const deleteTool = /(^|[._:/-])(delete|remove|unlink)(?=[._:/-]|$)/i.test(resolvedName);
   const headline = toolCallHeadline({ name: resolvedName, kind: resolvedKind, input, detail, path, hostnames });
- const sourceLabel = source === "mcp" && resolvedKind !== "mcp" ? "Metis" : source === "native" ? "CLI" : null;
+ const sourceLabel = source === "mcp" && resolvedKind !== "mcp" ? "J.A.R.V.I.S." : source === "native" ? "CLI" : null;
   const Icon = deleteTool && (resolvedKind === "edit" || headline.icon === "edit")
     ? Trash2
     : ACTION_ICONS[headline.icon];

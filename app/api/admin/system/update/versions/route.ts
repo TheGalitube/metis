@@ -12,6 +12,9 @@ export async function GET(req: Request) {
   if (!isHostAdmin(userId)) {
     return Response.json({ error: "Only host administrators can list installable versions." }, { status: 403 });
   }
+  if (process.env.JARVIS_ENABLE_SELF_UPDATE !== "1") {
+    return Response.json({ error: "Private J.A.R.V.I.S. Mk3.1 releases are not published yet." }, { status: 409 });
+  }
   try {
     const versions = await listUpdateVersions(config.root, fetch);
     return Response.json(versions, { headers: { "Cache-Control": "private, no-store" } });

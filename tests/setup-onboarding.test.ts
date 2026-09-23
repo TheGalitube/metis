@@ -20,19 +20,19 @@ test("setup API and wizard exist for first-run onboarding", () => {
   const helper = readFileSync(path.join(root, "lib/setup.ts"), "utf8");
   assert.match(api, /action === "bootstrap"/);
   assert.match(api, /markSetupComplete/);
-  assert.match(wizard, /Welcome to Metis/);
+  assert.match(wizard, /Welcome to J\.A\.R\.V\.I\.S\./);
   assert.match(wizard, /embedded/);
   assert.match(helper, /setup_complete/);
   assert.match(helper, /markSetupIncomplete/);
   assert.match(api, /markSetupIncomplete/);
 });
 
-test("onboarding uses the update-screen hands and four real steps", () => {
+test("onboarding uses the J.A.R.V.I.S. stage and four real steps", () => {
   const wizard = readFileSync(path.join(root, "components/setup-wizard.tsx"), "utf8");
   const hands = readFileSync(path.join(root, "components/hands-stage.tsx"), "utf8");
   const maintenance = readFileSync(path.join(root, "components/maintenance-screen.tsx"), "utf8");
-  assert.match(hands, /hand-left\.png/);
-  assert.match(hands, /hand-right\.png/);
+  assert.match(hands, /<JarvisWordmark/);
+  assert.match(hands, /jarvis-stage-halo/);
   assert.match(wizard, /HandsStage/);
   assert.match(maintenance, /HandsStage/);
   assert.match(wizard, /"welcome"/);

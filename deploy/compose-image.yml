@@ -1,7 +1,6 @@
 services:
   app:
-    build: .
-    image: jarvis-mk3-1:local
+    image: ${JARVIS_IMAGE:-ghcr.io/thegalitube/jarvis-mk3.1:latest}
     restart: unless-stopped
     env_file: .env
     environment:
@@ -34,7 +33,7 @@ services:
         condition: service_healthy
 
   worker:
-    image: jarvis-mk3-1:local
+    image: ${JARVIS_IMAGE:-ghcr.io/thegalitube/jarvis-mk3.1:latest}
     restart: unless-stopped
     command: ["pnpm", "exec", "tsx", "worker.ts"]
     env_file: .env
@@ -56,7 +55,7 @@ services:
         condition: service_healthy
 
   mcp:
-    image: jarvis-mk3-1:local
+    image: ${JARVIS_IMAGE:-ghcr.io/thegalitube/jarvis-mk3.1:latest}
     restart: unless-stopped
     command: ["node", "lib/mcp-core/gateway-core.mjs"]
     env_file: .env

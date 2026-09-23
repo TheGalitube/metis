@@ -59,7 +59,7 @@ if ($Command -eq "uninstall") {
   & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $uninstaller @forward
   exit $LASTEXITCODE
 }
-if (-not $RepoUrl) { $RepoUrl = "https://github.com/f1shyondrugs/metis-ai.git" }
+if (-not $RepoUrl) { $RepoUrl = "https://github.com/TheGalitube/Jarvis-Mk3.1.git" }
 if (-not $InstallDir) {
   $InstallDir = if ($env:METIS_AI_INSTALL_DIR) { $env:METIS_AI_INSTALL_DIR } else { Join-Path $HOME "metis-ai" }
 }
