@@ -4,7 +4,11 @@ Private, self-hosted agent workspace for the existing J.A.R.V.I.S. Mk3 core. Thi
 
 Mk3.1 uses the Metis Next.js workspace, worker and MCP gateway. The original [Jarvis Mk3](https://github.com/Galitube-Developement/Jarvis-Mk3) remains a separate Python service with its own SQLite database, task queue, approval policy and Codex/Hermes credentials. An optional, server-side MCP bridge provides limited health and task operations; see [docs/JARVIS-BRIDGE.md](docs/JARVIS-BRIDGE.md). The two databases are not merged.
 
-## Linux first install
+## Ubuntu install from the published image
+
+The public GHCR image lets an Ubuntu server pull and run Mk3.1 without GitHub SSH access or a source checkout. It runs the app, worker, and MCP gateway as three Compose services. Follow [docs/JARVIS-IMAGE-UBUNTU.md](docs/JARVIS-IMAGE-UBUNTU.md) for the root-user install, SSH tunnel, backup, and upgrade steps. The image becomes available for anonymous pulls after the first successful CI publication and the package is made public in GitHub Packages.
+
+## Linux install from source
 
 Use an authenticated checkout of this private repository on the Linux host. Docker Engine with Compose v2 is required. Keep this checkout, its data directory and its workspace under a dedicated non-root service account. Ports default to loopback; the MCP gateway is reachable only inside the Compose network.
 
@@ -17,7 +21,7 @@ bash deploy/install-jarvis-linux.sh
 
 The script builds this source locally, generates strong application and MCP secrets in a mode-`0600` `.env`, starts the app, worker and MCP services, and checks the web endpoint. Finish first-user setup through `http://127.0.0.1:3100/` on the host, or use SSH port forwarding. Do not expose the app or gateway directly to the public Internet. See [docs/JARVIS-LINUX.md](docs/JARVIS-LINUX.md) for prerequisites, bridge setup, backup, upgrades and verification.
 
-The Metis `releases/latest/download/metis-docker-install.sh` URL from upstream is **not** a Mk3.1 installer. Upstream v1.0.9 did not publish its Docker image, and a future upstream image would omit this repository's changes. Mk3.1 self-update remains disabled until private images and upgrade tests exist.
+The Metis `releases/latest/download/metis-docker-install.sh` URL from upstream is **not** a Mk3.1 installer. A future upstream image would omit this repository's changes. Mk3.1 self-update remains disabled until its upgrade path is tested.
 
 ## Development
 
