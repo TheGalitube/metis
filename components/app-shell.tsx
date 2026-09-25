@@ -55,6 +55,7 @@ import {
   EyeOff,
   Image as ImageIcon,
   KeyRound,
+  Keyboard,
   Link2,
   LockKeyhole,
   LoaderCircle,
@@ -2051,6 +2052,8 @@ export default function AppShell({ defaultCwd }: { defaultCwd: string }) {
   const [activeTerminalTabId, setActiveTerminalTabId] = useState<string | null>(null);
   const [browserUrl, setBrowserUrl] = useState("");
   const [browserInput, setBrowserInput] = useState("");
+  const [browserKeyboardOpen, setBrowserKeyboardOpen] = useState(false);
+  const browserKeyboardInputRef = useRef<HTMLTextAreaElement>(null);
   const [browserTabs, setBrowserTabs] = useState<BrowserTab[]>([
     { id: "browser-1", title: "New tab", url: "" },
   ]);
@@ -3420,7 +3423,27 @@ export default function AppShell({ defaultCwd }: { defaultCwd: string }) {
     }
   }
 
-  function pressBrowserKey(event: KeyboardEvent<HTMLDivElement>) {
+  function toggleBrowserKeyboard() {
+    const input = browserKeyboardInputRef.current;
+    if (!input) return;
+    if (browserKeyboardOpen) {
+      input.blur();
+      setBrowserKeyboardOpen(false);
+      browserViewportRef.current?.focus();
+      return;
+    }
+    input.focus();
+    setBrowserKeyboardOpen(true);
+  }
+
+  function typeBrowserText(event: React.ChangeEvent<HTMLTextAreaElement>) {
+    const text = event.currentTarget.value;
+    if (!text) return;
+    event.currentTarget.value = "";
+    if (!sendBrowserStreamAction("type", { text })) void performBrowserAction("type", { text });
+  }
+
+  function pressBrowserKey(event: KeyboardEvent<HTMLElement>) {
     const modifiers = [
       event.ctrlKey ? "Control" : "",
       event.altKey ? "Alt" : "",
@@ -11215,6 +11238,33 @@ export default function AppShell({ defaultCwd }: { defaultCwd: string }) {
                   <Button type="button" size="icon-xs" variant="ghost" className="size-7 shrink-0 rounded-lg" aria-label="Reload" title="Reload" onClick={() => void performBrowserAction("reload")}>
                     <RotateCcw className="size-3.5" />
                   </Button>
+                  <Button
+                    type="button"
+                    size="icon-xs"
+                    variant={browserKeyboardOpen ? "secondary" : "ghost"}
+                    className="hidden size-7 shrink-0 rounded-lg max-sm:inline-flex"
+                    aria-label={browserKeyboardOpen ? "Hide keyboard" : "Show keyboard"}
+                    aria-pressed={browserKeyboardOpen}
+                    title={browserKeyboardOpen ? "Hide keyboard" : "Show keyboard"}
+                    onPointerDown={(event) => event.preventDefault()}
+                    onClick={toggleBrowserKeyboard}
+                  >
+                    <Keyboard className="size-3.5" />
+                  </Button>
+                  <textarea
+                    ref={browserKeyboardInputRef}
+                    aria-label="Type into browser page"
+                    autoCapitalize="off"
+                    autoCorrect="off"
+                    enterKeyHint="done"
+                    rows={1}
+                    tabIndex={-1}
+                    className="pointer-events-none fixed left-1/2 top-1/2 h-px w-px resize-none overflow-hidden border-0 p-0 opacity-0"
+                    onFocus={() => setBrowserKeyboardOpen(true)}
+                    onBlur={() => setBrowserKeyboardOpen(false)}
+                    onChange={typeBrowserText}
+                    onKeyDown={pressBrowserKey}
+                  />
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button type="button" size="icon-xs" variant="ghost" className="size-7 shrink-0 rounded-lg" aria-label="Browser settings" title="Browser settings">
