@@ -37,11 +37,89 @@ async function resolvePnpm(root: string) {
     return "pnpm";
   }
 }
-const RELEASE_URL = "https://api.github.com/repos/f1shyondrugs/metis-ai/releases/latest";
-const COMMIT_URL = "https://api.github.com/repos/f1shyondrugs/metis-ai/commits/master";
+const DEFAULT_GITHUB_REPO = "f1shyondrugs/metis-ai";
+const RELEASE_URL = `https://api.github.com/repos/${DEFAULT_GITHUB_REPO}/releases/latest`;
 const USER_AGENT = "metis-ai-update-checker";
 const cache: { etag?: string; release?: GithubRelease; checkedAt?: number } = {};
 const CACHE_TTL_MS = 5 * 60_000;
+
+export function githubRepoFromRemoteUrl(url?: string | null): string {
+  const match = url?.trim().match(/github\.com[:/]([^/]+\/[^/.]+?)(?:\.git)?$/i);
+  return match?.[1] || DEFAULT_GITHUB_REPO;
+}
+
+async function resolveGithubRepo(root: string): Promise<string> {
+  try {
+    const { stdout } = await execFileAsync("git", ["remote", "get-url", "origin"], { cwd: root, timeout: 2_000 });
+    return githubRepoFromRemoteUrl(stdout);
+  } catch {
+    return DEFAULT_GITHUB_REPO;
+  }
+}
+
+function githubHeaders(): Record<string, string> {
+  const headers: Record<string, string> = { "User-Agent": USER_AGENT, Accept: "application/vnd.github+json" };
+  const token = process.env.GITHUB_TOKEN?.trim() || process.env.GH_TOKEN?.trim();
+  if (token) headers.Authorization = `Bearer ${token}`;
+  return headers;
+}
+
+export async function loadLocalUpdateIdentity(root: string) {
+  const currentManifest = await loadReleaseManifest(root);
+  const checkoutSha = await resolveCurrentGitHead(root);
+  const currentRef = checkoutSha || currentManifest.commit || currentManifest.tag || currentManifest.version || "unknown";
+  return { currentManifest, checkoutSha, currentRef };
+}
+
+async function resolveOriginMasterSha(root: string): Promise<string | null> {
+  try {
+    const { stdout } = await execFileAsync("git", ["ls-remote", "origin", "refs/heads/master"], { cwd: root, timeout: 8_000 });
+    const sha = stdout.trim().split(/\s+/)[0] || "";
+    return isGitCommitSha(sha) ? sha : null;
+  } catch {
+    return null;
+  }
+}
+
+async function isGitAncestor(root: string, ancestor: string, descendant: string): Promise<boolean> {
+  if (!ancestor.trim() || !descendant.trim()) return false;
+  try {
+    await execFileAsync("git", ["merge-base", "--is-ancestor", ancestor, descendant], { cwd: root, timeout: 2_000 });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function listLocalMasterCommits(root: string, currentCommit: string | null): Promise<UpdateCommitItem[]> {
+  for (const ref of ["origin/master", "master", "HEAD"]) {
+    try {
+      const { stdout } = await execFileAsync(
+        "git",
+        ["log", "-n", "30", "--format=%H%x1f%s%x1f%aI%x1f%an", ref],
+        { cwd: root, timeout: 4_000 },
+      );
+      const commits = stdout.trim().split("\n").flatMap((line) => {
+        const [sha, title, authoredAt, author] = line.split("\u001f");
+        if (!sha || !isGitCommitSha(sha)) return [];
+        return [{
+          sha,
+          shortSha: sha.slice(0, 12),
+          title: title?.trim() || "Untitled commit",
+          body: "",
+          htmlUrl: `https://github.com/${DEFAULT_GITHUB_REPO}/commit/${sha}`,
+          authoredAt: authoredAt?.trim() || null,
+          author: author?.trim() || null,
+          current: sameGitSha(sha, currentCommit),
+        } satisfies UpdateCommitItem];
+      });
+      if (commits.length) return commits;
+    } catch {
+      /* try the next ref */
+    }
+  }
+  return [];
+}
 
 export type GithubReleaseAsset = {
   name: string;
@@ -92,7 +170,7 @@ export type UpdateCheck = {
 export async function fetchLatestRelease(fetcher: typeof fetch = fetch): Promise<GithubRelease> {
   const now = Date.now();
   if (cache.release && cache.checkedAt && now - cache.checkedAt < CACHE_TTL_MS) return cache.release;
-  const headers: Record<string, string> = { "User-Agent": USER_AGENT, Accept: "application/vnd.github+json" };
+  const headers: Record<string, string> = githubHeaders();
   if (cache.etag) headers["If-None-Match"] = cache.etag;
   const response = await fetcher(RELEASE_URL, { headers, cache: "no-store" });
   if (response.status === 304 && cache.release) {
@@ -109,18 +187,23 @@ export async function fetchLatestRelease(fetcher: typeof fetch = fetch): Promise
   return release;
 }
 
-export async function fetchLatestCommit(fetcher: typeof fetch = fetch): Promise<GithubCommit> {
-  const response = await fetcher(COMMIT_URL, {
-    headers: { "User-Agent": USER_AGENT, Accept: "application/vnd.github+json" },
+export async function fetchLatestCommit(fetcher: typeof fetch = fetch, root?: string): Promise<GithubCommit> {
+  const repo = root ? await resolveGithubRepo(root) : DEFAULT_GITHUB_REPO;
+  const response = await fetcher(`https://api.github.com/repos/${repo}/commits/master`, {
+    headers: githubHeaders(),
     cache: "no-store",
   });
+  if (response.ok) {
+    const commit = (await response.json()) as GithubCommit;
+    if (commit.sha) return commit;
+  }
+  if (root) {
+    const sha = await resolveOriginMasterSha(root);
+    if (sha) return { sha };
+  }
   if (!response.ok) throw new Error(`GitHub commit lookup failed (${response.status}).`);
-  const commit = (await response.json()) as GithubCommit;
-  if (!commit.sha) throw new Error("GitHub returned a commit without a SHA.");
-  return commit;
+  throw new Error("GitHub returned a commit without a SHA.");
 }
-
-const githubHeaders = () => ({ "User-Agent": USER_AGENT, Accept: "application/vnd.github+json" });
 
 export function isGitCommitSha(value: string): boolean {
   return /^[0-9a-f]{7,40}$/i.test(value.trim());
@@ -132,10 +215,11 @@ function splitCommitMessage(message?: string) {
   return { title: title || "Untitled commit", body: rest.join("\n").trim() };
 }
 
-export async function fetchReleaseByTag(tag: string, fetcher: typeof fetch = fetch): Promise<GithubRelease> {
+export async function fetchReleaseByTag(tag: string, fetcher: typeof fetch = fetch, root?: string): Promise<GithubRelease> {
   const normalized = normalizeReleaseTag(tag);
   if (!normalized) throw new Error("Release tag must look like v1.0.0.");
-  const response = await fetcher(`https://api.github.com/repos/f1shyondrugs/metis-ai/releases/tags/${encodeURIComponent(normalized)}`, {
+  const repo = root ? await resolveGithubRepo(root) : DEFAULT_GITHUB_REPO;
+  const response = await fetcher(`https://api.github.com/repos/${repo}/releases/tags/${encodeURIComponent(normalized)}`, {
     headers: githubHeaders(),
     cache: "no-store",
   });
@@ -145,10 +229,11 @@ export async function fetchReleaseByTag(tag: string, fetcher: typeof fetch = fet
   return release;
 }
 
-export async function fetchCommitBySha(sha: string, fetcher: typeof fetch = fetch): Promise<GithubCommit> {
+export async function fetchCommitBySha(sha: string, fetcher: typeof fetch = fetch, root?: string): Promise<GithubCommit> {
   const value = sha.trim();
   if (!isGitCommitSha(value)) throw new Error("Commit must be a git SHA.");
-  const response = await fetcher(`https://api.github.com/repos/f1shyondrugs/metis-ai/commits/${encodeURIComponent(value)}`, {
+  const repo = root ? await resolveGithubRepo(root) : DEFAULT_GITHUB_REPO;
+  const response = await fetcher(`https://api.github.com/repos/${repo}/commits/${encodeURIComponent(value)}`, {
     headers: githubHeaders(),
     cache: "no-store",
   });
@@ -159,14 +244,27 @@ export async function fetchCommitBySha(sha: string, fetcher: typeof fetch = fetc
 }
 
 export async function listUpdateVersions(root: string, fetcher: typeof fetch = fetch): Promise<UpdateVersionList> {
-  const manifest = await loadReleaseManifest(root);
-  const head = await resolveCurrentGitHead(root);
+  const { currentManifest: manifest, checkoutSha: head } = await loadLocalUpdateIdentity(root);
   const currentCommit = head || manifest.commit || null;
   const currentTag = manifest.tag || null;
+  const repo = await resolveGithubRepo(root);
   const [releasesResponse, commitsResponse] = await Promise.all([
-    fetcher("https://api.github.com/repos/f1shyondrugs/metis-ai/releases?per_page=20", { headers: githubHeaders(), cache: "no-store" }),
-    fetcher("https://api.github.com/repos/f1shyondrugs/metis-ai/commits?sha=master&per_page=30", { headers: githubHeaders(), cache: "no-store" }),
+    fetcher(`https://api.github.com/repos/${repo}/releases?per_page=20`, { headers: githubHeaders(), cache: "no-store" }),
+    fetcher(`https://api.github.com/repos/${repo}/commits?sha=master&per_page=30`, { headers: githubHeaders(), cache: "no-store" }),
   ]);
+  if (!releasesResponse.ok && !commitsResponse.ok) {
+    const local = await listLocalMasterCommits(root, currentCommit);
+    if (local.length) {
+      return {
+        currentRef: currentTag || currentCommit || manifest.version,
+        currentCommit,
+        currentTag,
+        releases: [],
+        commits: local,
+      };
+    }
+    throw new Error(`GitHub version list failed (${releasesResponse.status}/${commitsResponse.status}).`);
+  }
   if (!releasesResponse.ok) throw new Error(`GitHub release list failed (${releasesResponse.status}).`);
   if (!commitsResponse.ok) throw new Error(`GitHub commit list failed (${commitsResponse.status}).`);
   const rawReleases = (await releasesResponse.json()) as GithubRelease[];
@@ -288,13 +386,14 @@ export async function checkForUpdate(
   fetcher: typeof fetch = fetch,
   channel: UpdateChannel = "releases",
 ): Promise<UpdateCheck> {
-  const currentManifest = await loadReleaseManifest(root);
-  const currentRef = currentManifest.tag || currentManifest.commit || "unknown";
+  const { currentManifest, checkoutSha, currentRef } = await loadLocalUpdateIdentity(root);
   if (channel === "commits") {
-    const commit = await fetchLatestCommit(fetcher);
-    const checkoutSha = await resolveCurrentGitHead(root);
-    const updateAvailable = commitChannelUpdateAvailable(commit.sha, currentManifest.commit, checkoutSha);
+    const commit = await fetchLatestCommit(fetcher, root);
+    let updateAvailable = commitChannelUpdateAvailable(commit.sha, currentManifest.commit, checkoutSha);
     const currentCheckout = checkoutSha || currentManifest.commit || currentRef;
+    if (updateAvailable && currentCheckout && await isGitAncestor(root, commit.sha, currentCheckout)) {
+      updateAvailable = false;
+    }
     return {
       channel,
       status: updateAvailable ? "commit-available" : "up-to-date",

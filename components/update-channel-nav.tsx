@@ -90,6 +90,8 @@ export function UpdateChannelNav({ isHostAdmin }: { isHostAdmin: boolean }) {
 }
 
 type UpdateSettingsState = {
+  status?: string;
+  error?: string;
   updateAvailable?: boolean;
   latestTag?: string;
   latestCommit?: string;
@@ -321,12 +323,15 @@ export function UpdateSettingsPanel({
     return <p className="text-sm text-muted-foreground">Updates are available to host administrators.</p>;
   }
   const available = Boolean(state?.updateAvailable);
+  const checkFailed = state?.status === "check-failed";
   const current = formatUpdateInstalledLabel(
     channel,
     state?.currentRef || state?.currentManifest?.commit,
     state?.currentManifest?.tag || state?.currentManifest?.version,
   );
-  const target = channel === "releases" ? state?.latestTag || "latest stable release" : state?.latestCommit?.slice(0, 12) || "latest master commit";
+  const target = checkFailed
+    ? "GitHub check failed"
+    : channel === "releases" ? state?.latestTag || "latest stable release" : state?.latestCommit?.slice(0, 12) || "latest master commit";
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -359,11 +364,14 @@ export function UpdateSettingsPanel({
         <RefreshCw className={cn("mt-0.5 size-4 shrink-0", available ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground")} />
         <div>
           <p className={cn("text-sm font-medium", available && "text-emerald-700 dark:text-emerald-300")}>
-            {available ? "Update Available" : "No updates available"}
+            {available ? "Update Available" : checkFailed ? "Could not check for updates" : "No updates available"}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
             Installed: {current} · Tracking: {target}
           </p>
+          {checkFailed && state?.error ? (
+            <p className="mt-1 text-xs text-muted-foreground">{state.error}</p>
+          ) : null}
         </div>
       </div>
       {available && (channel === "releases" || channel === "commits") ? (

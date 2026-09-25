@@ -20,8 +20,11 @@ export function formatUpdateInstalledLabel(
   currentRef?: string | null,
   version?: string | null,
 ): string {
-  if (channel === "commits") return shortGitSha(currentRef) || currentRef?.trim() || "unknown";
-  return version?.trim() || "development checkout";
+  const ref = currentRef?.trim() || "";
+  const labeled = ref && ref !== "unknown" ? ref : "";
+  const ver = version?.trim() || "";
+  if (channel === "commits") return shortGitSha(labeled) || labeled || ver || "unknown";
+  return ver || labeled || "development checkout";
 }
 
 export function commitChannelUpdateAvailable(

@@ -5,6 +5,7 @@ import {
   checkForUpdate,
   fetchCommitBySha,
   fetchReleaseByTag,
+  loadLocalUpdateIdentity,
   resolveCurrentGitHead,
   type UpdateChannel,
 } from "@/lib/github-releases";
@@ -54,9 +55,14 @@ export async function GET(req: Request) {
     const update = await checkForUpdate(config.root, fetch, channel);
     return Response.json(update, { headers: { "Cache-Control": "private, no-store" } });
   } catch (error) {
+    const local = await loadLocalUpdateIdentity(config.root).catch(() => null);
     return Response.json({
       status: "check-failed",
       error: error instanceof Error ? error.message : "Could not check for updates.",
+      currentRef: local?.currentRef || "unknown",
+      currentManifest: local?.currentManifest,
+      updateAvailable: false,
+      latestTag: local?.currentManifest.tag || local?.currentManifest.version,
     }, { status: 502 });
   }
 }
@@ -85,8 +91,8 @@ export async function POST(req: Request) {
       if (config.docker && requestedCommit) {
         return Response.json({ error: "Pinning a commit is only supported for native installs." }, { status: 409 });
       }
-      const release = requestedTag ? await fetchReleaseByTag(requestedTag, fetch) : null;
-      const commit = requestedCommit ? await fetchCommitBySha(requestedCommit, fetch) : null;
+      const release = requestedTag ? await fetchReleaseByTag(requestedTag, fetch, config.root) : null;
+      const commit = requestedCommit ? await fetchCommitBySha(requestedCommit, fetch, config.root) : null;
       const pinnedChannel: UpdateChannel = requestedCommit ? "commits" : "releases";
       const tag = release ? (release.tag_name || requestedTag) : undefined;
       const commitSha = commit?.sha || requestedCommit;

@@ -9,8 +9,10 @@ import {
   commitChannelUpdateAvailable,
   compareReleaseVersions,
   formatUpdateInstalledLabel,
+  githubRepoFromRemoteUrl,
   isReleaseNewer,
   listUpdateVersions,
+  loadLocalUpdateIdentity,
   sameGitSha,
   type GithubRelease,
 } from "../lib/github-releases";
@@ -226,6 +228,94 @@ test("listUpdateVersions marks the current tag and commit", async () => {
     assert.equal(listed.commits[0]?.title, "keep installer updates alive");
     assert.equal(listed.commits[0]?.body, "Details here.");
     assert.equal(listed.commits[1]?.current, false);
+  } finally {
+    if (previousDistDir === undefined) delete process.env.NEXT_DIST_DIR;
+    else process.env.NEXT_DIST_DIR = previousDistDir;
+    if (previousGithubSha === undefined) delete process.env.GITHUB_SHA;
+    else process.env.GITHUB_SHA = previousGithubSha;
+    if (previousReleaseCommit === undefined) delete process.env.METIS_RELEASE_COMMIT;
+    else process.env.METIS_RELEASE_COMMIT = previousReleaseCommit;
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("installed label falls back to the package version instead of unknown", () => {
+  assert.equal(formatUpdateInstalledLabel("commits", "unknown", "1.0.9"), "1.0.9");
+  assert.equal(formatUpdateInstalledLabel("commits", "", "1.0.9"), "1.0.9");
+  assert.equal(githubRepoFromRemoteUrl("https://github.com/f1shyondrugs/metis.git"), "f1shyondrugs/metis");
+  assert.equal(githubRepoFromRemoteUrl("git@github.com:f1shyondrugs/metis.git"), "f1shyondrugs/metis");
+});
+
+test("local identity keeps the git SHA when GitHub is unavailable", async () => {
+  const root = await mkdtemp(`${os.tmpdir()}/metis-update-local-`);
+  const previousDistDir = process.env.NEXT_DIST_DIR;
+  const previousGithubSha = process.env.GITHUB_SHA;
+  const previousReleaseCommit = process.env.METIS_RELEASE_COMMIT;
+  try {
+    delete process.env.GITHUB_SHA;
+    delete process.env.METIS_RELEASE_COMMIT;
+    await execFileAsync("git", ["init"], { cwd: root });
+    await execFileAsync("git", ["config", "user.email", "test@example.com"], { cwd: root });
+    await execFileAsync("git", ["config", "user.name", "test"], { cwd: root });
+    await writeFile(`${root}/README.md`, "local identity\n");
+    await execFileAsync("git", ["add", "README.md"], { cwd: root });
+    await execFileAsync("git", ["commit", "-m", "init"], { cwd: root });
+    const head = (await execFileAsync("git", ["rev-parse", "HEAD"], { cwd: root })).stdout.trim();
+    await mkdir(`${root}/.next`, { recursive: true });
+    await writeFile(`${root}/package.json`, JSON.stringify({ version: "1.0.9" }));
+    await writeFile(`${root}/.next/release-manifest.json`, JSON.stringify({
+      schemaVersion: 1, version: "1.0.9", packageVersion: "1.0.9", tag: null,
+      commit: head, channel: "development", isRelease: false, builtAt: new Date().toISOString(),
+    }));
+    process.env.NEXT_DIST_DIR = ".next";
+    const identity = await loadLocalUpdateIdentity(root);
+    assert.equal(sameGitSha(identity.currentRef, head), true);
+    const listed = await listUpdateVersions(root, async () => new Response("rate limit", { status: 403 }));
+    assert.equal(listed.commits[0]?.sha, head);
+    assert.equal(listed.commits[0]?.current, true);
+  } finally {
+    if (previousDistDir === undefined) delete process.env.NEXT_DIST_DIR;
+    else process.env.NEXT_DIST_DIR = previousDistDir;
+    if (previousGithubSha === undefined) delete process.env.GITHUB_SHA;
+    else process.env.GITHUB_SHA = previousGithubSha;
+    if (previousReleaseCommit === undefined) delete process.env.METIS_RELEASE_COMMIT;
+    else process.env.METIS_RELEASE_COMMIT = previousReleaseCommit;
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("commit channel does not offer an update that would move HEAD backwards", async () => {
+  const root = await mkdtemp(`${os.tmpdir()}/metis-update-ahead-`);
+  const previousDistDir = process.env.NEXT_DIST_DIR;
+  const previousGithubSha = process.env.GITHUB_SHA;
+  const previousReleaseCommit = process.env.METIS_RELEASE_COMMIT;
+  try {
+    delete process.env.GITHUB_SHA;
+    delete process.env.METIS_RELEASE_COMMIT;
+    await execFileAsync("git", ["init"], { cwd: root });
+    await execFileAsync("git", ["config", "user.email", "test@example.com"], { cwd: root });
+    await execFileAsync("git", ["config", "user.name", "test"], { cwd: root });
+    await writeFile(`${root}/README.md`, "first\n");
+    await execFileAsync("git", ["add", "README.md"], { cwd: root });
+    await execFileAsync("git", ["commit", "-m", "first"], { cwd: root });
+    const parent = (await execFileAsync("git", ["rev-parse", "HEAD"], { cwd: root })).stdout.trim();
+    await writeFile(`${root}/README.md`, "second\n");
+    await execFileAsync("git", ["commit", "-am", "second"], { cwd: root });
+    const head = (await execFileAsync("git", ["rev-parse", "HEAD"], { cwd: root })).stdout.trim();
+    await mkdir(`${root}/.next`, { recursive: true });
+    await writeFile(`${root}/package.json`, JSON.stringify({ version: "1.0.9" }));
+    await writeFile(`${root}/.next/release-manifest.json`, JSON.stringify({
+      schemaVersion: 1, version: "1.0.9", packageVersion: "1.0.9", tag: null,
+      commit: head, channel: "development", isRelease: false, builtAt: new Date().toISOString(),
+    }));
+    process.env.NEXT_DIST_DIR = ".next";
+    const result = await checkForUpdate(root, async () => new Response(JSON.stringify({
+      sha: parent, html_url: `https://github.com/f1shyondrugs/metis/commit/${parent}`,
+      commit: { message: "older github view" },
+    }), { status: 200 }), "commits");
+    assert.equal(result.updateAvailable, false);
+    assert.equal(result.status, "up-to-date");
+    assert.equal(sameGitSha(result.currentRef, head), true);
   } finally {
     if (previousDistDir === undefined) delete process.env.NEXT_DIST_DIR;
     else process.env.NEXT_DIST_DIR = previousDistDir;
