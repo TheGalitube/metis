@@ -7,6 +7,7 @@ import { promisify } from "node:util";
 const execFileAsync = promisify(execFile);
 
 export const INSTALLER_UPDATE_LOG = "metis-installer-update.log";
+export const INSTALLER_UPDATE_SCRIPT = "metis-ai-update-run";
 export const INSTALLER_UPDATE_UNIT_SUFFIX = "-self-update";
 
 export type InstallerUpdateInput = {
@@ -71,6 +72,11 @@ export function installerUpdateLogPath(dataDir: string) {
   return path.join(dataDir, INSTALLER_UPDATE_LOG);
 }
 
+export function installerUpdateScriptPath(dataDir: string, source: string) {
+  const ext = path.extname(source) || ".sh";
+  return path.join(dataDir, `${INSTALLER_UPDATE_SCRIPT}${ext}`);
+}
+
 export function installerUpdateJobMarker(jobId: string) {
   return `[metis-update-job:${jobId}]`;
 }
@@ -81,10 +87,18 @@ export function installerLogForJob(logText: string, jobId: string) {
   return markerIndex >= 0 ? logText.slice(markerIndex) : "";
 }
 
-export async function initializeInstallerUpdateLog(dataDir: string, jobId: string) {
+export async function initializeInstallerUpdateLog(
+  dataDir: string,
+  jobId: string,
+  range?: { fromLabel?: string; toLabel?: string },
+) {
   await mkdir(dataDir, { recursive: true });
-  await writeFile(installerUpdateLogPath(dataDir), `${installerUpdateJobMarker(jobId)}\n`, {
+  const lines = [installerUpdateJobMarker(jobId)];
+  if (range?.fromLabel) lines.push(`from: ${range.fromLabel}`);
+  if (range?.toLabel) lines.push(`to: ${range.toLabel}`);
+  await writeFile(installerUpdateLogPath(dataDir), `${lines.join("\n")}\n`, {
     encoding: "utf8",
+    flag: "a",
     mode: 0o600,
   });
 }
@@ -203,9 +217,9 @@ async function flushNewLogLines(file: string, offset: { bytes: number }, log: (m
   }
 }
 
-async function copyScriptToTemp(source: string) {
-  const ext = path.extname(source) || ".sh";
-  const dest = path.join(os.tmpdir(), `metis-ai-update-${process.pid}-${Date.now()}${ext}`);
+async function copyScriptForUpdate(source: string, dataDir: string) {
+  const dest = installerUpdateScriptPath(dataDir, source);
+  await mkdir(dataDir, { recursive: true });
   await copyFile(source, dest);
   return dest;
 }
@@ -240,6 +254,7 @@ async function runSystemdInstaller(plan: InstallerUpdatePlan, args: string[], lo
     "--description=Metis AI installer update",
     `--property=StandardOutput=append:${plan.logFile}`,
     `--property=StandardError=append:${plan.logFile}`,
+    "--property=PrivateTmp=no",
     ...installerSystemdEnvironment(),
     plan.command,
     ...args,
@@ -264,7 +279,12 @@ async function runSystemdInstaller(plan: InstallerUpdatePlan, args: string[], lo
     const result = status.Result || "";
     const code = status.ExecMainStatus || "";
     if (active === "failed" || result === "failed" || (result === "exit-code" && code !== "0")) {
-      throw new Error(`Installer update failed (systemd result=${result || active}, status=${code || "unknown"}).`);
+      await flushNewLogLines(plan.logFile, offset, log);
+      const logText = await readFile(plan.logFile, "utf8").catch(() => "");
+      const last = logText.trim().split(/\r?\n/).filter(Boolean).at(-1);
+      throw new Error(
+        `Installer update failed (systemd result=${result || active}, status=${code || "unknown"}).${last ? ` ${last}` : ""}`,
+      );
     }
     if (active === "inactive" || active === "dead") {
       await flushNewLogLines(plan.logFile, offset, log);
@@ -319,7 +339,7 @@ export async function runInstallerUpdate(
 ): Promise<InstallerUpdateResult> {
   const plan = buildInstallerUpdatePlan(input);
   await mkdir(input.dataDir, { recursive: true });
-  const script = await copyScriptToTemp(plan.scriptSource);
+  const script = await copyScriptForUpdate(plan.scriptSource, input.dataDir);
   const args = plan.args.map((value) => (value === plan.scriptSource ? script : value));
   log(`Running ${plan.kind} installer: ${plan.command} ${args.join(" ")}`);
   if (plan.unitName && plan.platform === "linux") {

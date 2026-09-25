@@ -5,9 +5,28 @@ import {
   checkForUpdate,
   fetchCommitBySha,
   fetchReleaseByTag,
+  resolveCurrentGitHead,
   type UpdateChannel,
 } from "@/lib/github-releases";
+import { loadReleaseManifest } from "@/lib/release-manifest";
+import { buildUpdateJobRange } from "@/lib/update-history";
 import { resolveUpdateJob, startInstallerUpdateJob } from "@/lib/update-job";
+
+async function rangeForUpdate(channel: UpdateChannel, target: { tag?: string; commit?: string }) {
+  const [manifest, head] = await Promise.all([
+    loadReleaseManifest(config.root),
+    resolveCurrentGitHead(config.root),
+  ]);
+  return buildUpdateJobRange({
+    channel,
+    currentRef: head || manifest.commit,
+    currentTag: manifest.tag,
+    currentVersion: manifest.version,
+    currentCommit: head || manifest.commit,
+    tag: target.tag,
+    commit: target.commit,
+  });
+}
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -69,15 +88,17 @@ export async function POST(req: Request) {
       const release = requestedTag ? await fetchReleaseByTag(requestedTag, fetch) : null;
       const commit = requestedCommit ? await fetchCommitBySha(requestedCommit, fetch) : null;
       const pinnedChannel: UpdateChannel = requestedCommit ? "commits" : "releases";
+      const tag = release ? (release.tag_name || requestedTag) : undefined;
+      const commitSha = commit?.sha || requestedCommit;
       const job = await startInstallerUpdateJob({
         root: config.root,
         docker: config.docker,
         channel: pinnedChannel,
-        tag: release ? (release.tag_name || requestedTag) : undefined,
-        commit: commit?.sha || requestedCommit,
+        tag,
+        commit: commitSha,
         serviceName: config.serviceName,
         dataDir: config.dataDir,
-      });
+      }, await rangeForUpdate(pinnedChannel, { tag, commit: commitSha }));
       const label = release?.tag_name || commit?.sha.slice(0, 12) || "the selected version";
       return Response.json({
         ok: true,
@@ -113,7 +134,10 @@ export async function POST(req: Request) {
       commit: update.latestCommit,
       serviceName: config.serviceName,
       dataDir: config.dataDir,
-    });
+    }, await rangeForUpdate(channel, {
+      tag: channel === "releases" ? update.latestTag : undefined,
+      commit: update.latestCommit,
+    }));
     return Response.json({
       ok: true,
       status: "preparing",

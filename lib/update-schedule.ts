@@ -1,6 +1,7 @@
 import { getDatabase } from "@/lib/sqlite";
 import { config } from "@/lib/config";
 import { checkForUpdate } from "@/lib/github-releases";
+import { buildUpdateJobRange } from "@/lib/update-history";
 import { getUpdateJob, startInstallerUpdateJob } from "@/lib/update-job";
 
 export type UpdateSchedule = {
@@ -78,7 +79,14 @@ export function startUpdateScheduler() {
           tag: update.latestTag,
           serviceName: config.serviceName,
           dataDir: config.dataDir,
-        });
+        }, buildUpdateJobRange({
+          channel: "releases",
+          currentRef: update.currentRef,
+          currentTag: update.currentManifest.tag,
+          currentVersion: update.currentManifest.version,
+          currentCommit: update.currentManifest.commit || update.currentRef,
+          tag: update.latestTag,
+        }));
         const deadline = Date.now() + 40 * 60_000;
         while (Date.now() < deadline) {
           await new Promise((resolve) => setTimeout(resolve, 2_000));

@@ -487,7 +487,7 @@ test("platform installers accept uninstall and pin a release with --version", ()
     assert.match(source, /linux\.sh uninstall|macos\.sh uninstall/);
     assert.match(source, /\[\[ "\$\{1:-\}" == "uninstall" \]\]/);
     assert.match(source, /--version\) \[\[ \$# -ge 2 \]\]/);
-    assert.match(source, /git -C "\$install_dir" checkout --force "\$release_version"/);
+    assert.match(source, /git -C "\$install_dir" checkout --force "\$update_ref"/);
   }
   assert.match(linux, /run_privileged systemctl enable "\$\{service_name\}\.service"/);
   assert.match(linux, /run_privileged systemctl restart "\$\{service_name\}\.service"/);
@@ -496,7 +496,7 @@ test("platform installers accept uninstall and pin a release with --version", ()
   assert.ok(enableAt >= 0 && restartAt > enableAt, "linux must restart units after enable so upgrades load the new build");
   assert.match(windows, /\$Command -eq "uninstall"/);
   assert.match(windows, /\[string\]\$Version/);
-  assert.match(windows, /git -C \$InstallDir checkout --force \$Version/);
+  assert.match(windows, /git -C \$InstallDir checkout --force \$updateRef/);
 });
 
 test("native installers synchronize provider CLIs after locked dependencies", () => {

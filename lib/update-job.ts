@@ -12,6 +12,7 @@ import {
   runInstallerUpdate,
   type InstallerUpdateInput,
 } from "@/lib/installer-update";
+import { historyEntryFromJob, upsertUpdateHistoryEntry, type UpdateJobRange } from "@/lib/update-history";
 import { clearMaintenanceState, setMaintenanceState } from "@/lib/maintenance-state";
 
 type UpdateJobResult = {
@@ -32,7 +33,7 @@ export type UpdateJob = {
   result?: UpdateJobResult;
   error?: string;
   logs: string[];
-};
+} & Partial<UpdateJobRange>;
 
 const jobs = new Map<string, UpdateJob>();
 const INSTALLER_REASON = "Metis is being updated with the same installer used for a fresh install. Keep this page open.";
@@ -45,6 +46,7 @@ async function persistJob(job: UpdateJob) {
   try {
     await mkdir(config.dataDir, { recursive: true });
     await writeFile(jobStorePath(), `${JSON.stringify(job)}\n`, { encoding: "utf8", mode: 0o600 });
+    await upsertUpdateHistoryEntry(historyEntryFromJob(job));
   } catch {
     // Status polling can still recover from the installer log after a restart.
   }
@@ -62,6 +64,12 @@ function parseStoredJob(raw: string): UpdateJob | null {
       ...(parsed.finishedAt ? { finishedAt: parsed.finishedAt } : {}),
       ...(parsed.result ? { result: parsed.result } : {}),
       ...(parsed.error ? { error: parsed.error } : {}),
+      ...(parsed.fromLabel ? { fromLabel: parsed.fromLabel } : {}),
+      ...(parsed.toLabel ? { toLabel: parsed.toLabel } : {}),
+      ...(parsed.fromTag !== undefined ? { fromTag: parsed.fromTag } : {}),
+      ...(parsed.fromCommit !== undefined ? { fromCommit: parsed.fromCommit } : {}),
+      ...(parsed.toTag !== undefined ? { toTag: parsed.toTag } : {}),
+      ...(parsed.toCommit !== undefined ? { toCommit: parsed.toCommit } : {}),
       logs: Array.isArray(parsed.logs) ? parsed.logs.map(String) : [],
     };
   } catch {
@@ -169,11 +177,20 @@ async function startUpdateJob(
   return job;
 }
 
-export function startInstallerUpdateJob(input: InstallerUpdateInput) {
+export function startInstallerUpdateJob(input: InstallerUpdateInput, range?: UpdateJobRange) {
+  const labels = range || {
+    fromLabel: "unknown",
+    toLabel: input.commit || input.tag || (input.channel === "commits" ? "master" : "latest"),
+    toTag: input.tag,
+    toCommit: input.commit,
+  };
   return startUpdateJob(async (log) => {
     const result = await runInstallerUpdate(input, log);
     return { ...result, commit: input.commit };
-  }, INSTALLER_REASON, (job) => initializeInstallerUpdateLog(input.dataDir, job.jobId));
+  }, INSTALLER_REASON, async (job) => {
+    Object.assign(job, labels);
+    await initializeInstallerUpdateLog(input.dataDir, job.jobId, labels);
+  });
 }
 
 export function getUpdateJob(jobId: string) {

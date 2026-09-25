@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { GitBranch, LoaderCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatUpdateInstalledLabel } from "@/lib/update-display";
+import { UpdateLogsDialog } from "@/components/update-logs-dialog";
 import { UpdateVersionDialog } from "@/components/update-version-dialog";
 import {
   activateInstallerMaintenanceScreen,
@@ -174,6 +175,7 @@ export function UpdateSettingsPanel({
   const [scheduleTime, setScheduleTime] = useState("03:00");
   const [scheduleTimezone, setScheduleTimezone] = useState("UTC");
   const [otherVersionOpen, setOtherVersionOpen] = useState(false);
+  const [logsOpen, setLogsOpen] = useState(false);
 
   useEffect(() => {
     if (!isHostAdmin) return;
@@ -404,6 +406,14 @@ export function UpdateSettingsPanel({
           Download other version
         </Button>
       </div>
+      <div className="space-y-2 border-t border-border/60 pt-5">
+        <h4 className="text-sm font-medium">Update logs</h4>
+        <p className="text-xs text-muted-foreground">See which version an update started from, which version it targeted, and the installer output.</p>
+        <Button type="button" size="sm" variant="outline" onClick={() => setLogsOpen(true)}>
+          View update logs
+        </Button>
+      </div>
+      <UpdateLogsDialog open={logsOpen} onOpenChange={setLogsOpen} />
       <UpdateVersionDialog
         open={otherVersionOpen}
         onOpenChange={setOtherVersionOpen}

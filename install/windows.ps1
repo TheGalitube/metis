@@ -387,25 +387,35 @@ if (-not $useDocker -and (Get-NodeMajor) -lt 22) { throw "Node.js 22 or newer is
 
 if (Test-Path (Join-Path $InstallDir ".git")) {
   git -C $InstallDir fetch --force origin
+  if ($LASTEXITCODE -ne 0) { throw "Could not fetch Metis AI commits." }
   git -C $InstallDir fetch --tags --force
+  if ($LASTEXITCODE -ne 0) { throw "Could not fetch Metis AI release tags." }
 } elseif ((Test-Path $InstallDir) -and (Get-ChildItem -Force $InstallDir | Select-Object -First 1)) {
   throw "Installation directory exists and is not a Metis AI checkout: $InstallDir"
 } else {
   New-Item -ItemType Directory -Force -Path (Split-Path $InstallDir) | Out-Null
   git clone $RepoUrl $InstallDir
+  if ($LASTEXITCODE -ne 0) { throw "Could not clone Metis AI." }
 }
 if ($Commit) {
   if ($Commit -notmatch '^[0-9a-fA-F]{7,40}$') { throw "Commit must be a git SHA." }
   if ($Version -and $Version -ne "latest") { throw "Use either -Version or -Commit, not both." }
-  git -C $InstallDir checkout --force -B master $Commit
+  $updateRef = $Commit
+  git -C $InstallDir checkout --force -B master $updateRef
 } elseif ($Version -and $Version -ne "latest") {
   if ($Version -notmatch '^v\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$') {
     throw "Version must be latest or a v-prefixed SemVer tag, for example v1.0.0."
   }
-  git -C $InstallDir checkout --force $Version
+  $updateRef = $Version
+  git -C $InstallDir checkout --force $updateRef
 } else {
-  git -C $InstallDir pull --ff-only
+  $updateRef = "origin/master"
+  git -C $InstallDir checkout --force -B master $updateRef
 }
+if ($LASTEXITCODE -ne 0) { throw "Could not check out Metis AI $updateRef." }
+# Replace tracked local edits and divergent commits, preserving ignored install state.
+git -C $InstallDir reset --hard $updateRef
+if ($LASTEXITCODE -ne 0) { throw "Could not reset Metis AI to $updateRef." }
 Restore-StashedData $dataDir
 
 function Get-PnpmCommand {

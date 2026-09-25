@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { buildInstallerUpdatePlan, installerLogIndicatesFailure, installerLogIndicatesSuccess, installerSystemdEnvironment } from "../lib/installer-update";
+import { buildInstallerUpdatePlan, installerLogIndicatesFailure, installerLogIndicatesSuccess, installerSystemdEnvironment, installerUpdateScriptPath } from "../lib/installer-update";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -37,7 +37,7 @@ test("native Linux settings updates run linux.sh non-interactively", () => {
   assert.equal(plan.unitName, "metis-ai-self-update");
 });
 
-test("native commit updates omit --version so the installer git-pulls master", () => {
+test("native commit updates omit --version so the installer selects origin/master", () => {
   const plan = buildInstallerUpdatePlan({
     ...base,
     docker: false,
@@ -103,6 +103,12 @@ test("macOS and Windows plans use the platform installer files", () => {
   assert.equal(win.scriptSource, path.join(root, "install", "windows.ps1"));
   assert.equal(win.args.includes("-Version"), true);
   assert.equal(win.args.includes("v1.0.5"), true);
+});
+
+test("copied installer scripts stay in dataDir, not systemd PrivateTmp", () => {
+  const dest = installerUpdateScriptPath("/var/lib/metis/data", path.join(root, "install", "linux.sh"));
+  assert.equal(dest, "/var/lib/metis/data/metis-ai-update-run.sh");
+  assert.equal(dest.includes("/tmp/"), false);
 });
 
 test("systemd-run environment always includes HOME", () => {

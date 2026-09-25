@@ -151,8 +151,8 @@ Options:
   --mcp-port PORT         MCP gateway port (default: 8787)
      --service-name NAME     launchd service prefix (default: metis-ai)
   --public-url URL        URL shown to users
-  --version TAG          Checkout a release tag such as v1.0.0 after clone/pull
-  --commit SHA           Checkout a master commit SHA after clone/pull
+  --version TAG          Checkout a release tag such as v1.0.0 after fetch
+  --commit SHA           Checkout a master commit SHA after fetch
   --native                Force Node.js + launchd instead of Docker
   --replace-existing     Uninstall a detected existing install (keeps data), then continue
   --non-interactive       Never read prompts; all values come from arguments/defaults
@@ -615,12 +615,18 @@ else
   git clone "$REPO_URL" "$install_dir"
 fi
 if [[ -n "$commit_sha" ]]; then
-  git -C "$install_dir" checkout --force -B master "$commit_sha"
+  update_ref="$commit_sha"
+  git -C "$install_dir" checkout --force -B master "$update_ref"
 elif [[ -n "$release_version" && "$release_version" != "latest" ]]; then
-  git -C "$install_dir" checkout --force "$release_version"
+  update_ref="$release_version"
+  git -C "$install_dir" checkout --force "$update_ref"
 else
-  git -C "$install_dir" pull --ff-only
+  update_ref="origin/master"
+  git -C "$install_dir" checkout --force -B master "$update_ref"
 fi
+# Installer updates replace tracked local edits and divergent commits with the
+# selected upstream ref. Ignored install state (including .env and data) stays.
+git -C "$install_dir" reset --hard "$update_ref"
 
 restore_stashed_data "$data_dir"
 
